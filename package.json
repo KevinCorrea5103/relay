@@ -5,6 +5,8 @@
   "description": "The backend cloud for reliable AI agents.",
   "packageManager": "pnpm@9.0.0",
   "scripts": {
+    "bootstrap": "node scripts/setup.mjs",
+    "dev": "dotenv -e .env -- concurrently -n runtime,api,dash,web -c yellow.bold,green.bold,cyan.bold,magenta.bold \"pnpm dev:runtime\" \"pnpm dev:control-plane\" \"pnpm dev:dashboard\" \"pnpm dev:web\"",
     "build": "pnpm -r build",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
@@ -20,5 +22,9 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "dotenv-cli": "^11.0.0"
   }
 }

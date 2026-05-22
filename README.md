@@ -82,57 +82,53 @@ migrations/
 docker-compose.yml
 ```
 
-## Full setup, first run
+## Quick start
 
 Prereqs: Node 20+, pnpm 9+, Go 1.22+, Docker, and at least one provider API key
 (Anthropic or OpenAI).
 
 ```bash
-# one-time install + build
+git clone https://github.com/KevinCorrea5103/relay
+cd relay
 pnpm install
-cd runtime && go mod tidy && cd ..
-pnpm --filter @relay/sdk build
-pnpm --filter @relay/db build
 
-# Postgres + schema
-pnpm db:up
-pnpm db:migrate
+# add at least one provider key to .env first
+echo "OPENAI_API_KEY=sk-..."       >> .env
+echo "ANTHROPIC_API_KEY=sk-ant-..." >> .env
 
-# generate a master key (persist it!)
-export RELAY_MASTER_KEY=$(pnpm -s db:keygen)
-echo "RELAY_MASTER_KEY=$RELAY_MASTER_KEY"   # save to your .env
+# one-shot, idempotent: generates keys, builds, migrates, bootstraps
+pnpm bootstrap
 
-# bootstrap: create tenant, mint api key, upload provider creds from env
-export ANTHROPIC_API_KEY=sk-ant-...
-export OPENAI_API_KEY=sk-...
-pnpm db:bootstrap
-# → prints RELAY_API_KEY=relay_live_…   (save this; not shown again)
-
-export RELAY_API_KEY=relay_live_…
+# start everything (4 services, ctrl-c kills all)
+pnpm dev
 ```
 
-Then run the stack — note **no provider API keys** anywhere in service env:
+You'll see four colored logs (runtime, api, dash, web). Open:
+
+- **http://localhost:3000** — internal dashboard (runs + traces)
+- **http://localhost:3001** — landing + docs + login
+
+Fire an agent in another terminal:
 
 ```bash
-# terminal A — runtime (stateless; no keys)
-pnpm dev:runtime
-
-# terminal B — control plane (needs RELAY_MASTER_KEY to decrypt creds)
-RELAY_MASTER_KEY=$RELAY_MASTER_KEY pnpm dev:control-plane
-
-# terminal C — dashboard (needs RELAY_API_KEY to authenticate its calls)
-RELAY_API_KEY=$RELAY_API_KEY pnpm dev:dashboard
-# open http://localhost:3000
-
-# terminal C′ (optional) — marketing site + docs + login
-pnpm dev:web
-# open http://localhost:3001 (redirects to /en; also /es for Spanish)
-
-# terminal D — fire agents (RELAY_API_KEY needed by the SDK)
 pnpm example                                     # default model
 RELAY_MODEL=gpt-4o-mini       pnpm example
 RELAY_MODEL=claude-haiku-4-5  pnpm example "Compute (17+8)*3"
+pnpm example:memory                              # 2-run memory demo
 ```
+
+### What's running
+
+```
+pnpm dev   →  concurrently:
+                runtime        :4100   (Go)
+                control-plane  :4000   (Node/Hono)
+                dashboard      :3000   (Next.js)
+                web            :3001   (Next.js — landing/docs/login)
+```
+
+Re-running `pnpm bootstrap` is safe: every step is idempotent. Re-runs only do
+work for steps that haven't been completed.
 
 ## Adding or rotating credentials at runtime
 
