@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    background-color: theme(colors.ink.950);
+    color: theme(colors.ink.100);
+  }
+  ::selection {
+    background: theme(colors.emerald.500 / 30%);
+  }
+}
+
+@layer components {
+  .grid-bg {
+    background-image:
+      linear-gradient(theme(colors.ink.800 / 50%) 1px, transparent 1px),
+      linear-gradient(90deg, theme(colors.ink.800 / 50%) 1px, transparent 1px);
+    background-size: 32px 32px;
+    background-position: -1px -1px;
+  }
+  .fade-mask {
+    mask-image: radial-gradient(circle at center, black 30%, transparent 70%);
+    -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 70%);
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "@relay/db",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "migrate": "tsx src/migrate.ts",
+    "bootstrap": "tsx src/bootstrap.ts",
+    "keygen": "tsx -e \"import('./src/encryption.js').then(m => console.log(m.generateMasterKey()))\""
+  },
+  "dependencies": {
+    "pg": "^8.13.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "tsx": "^4.19.0",
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.0"
+  }
+}

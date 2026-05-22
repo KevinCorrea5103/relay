@@ -1,0 +1,18 @@
+node_modules
+dist
+.next
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+.turbo
+.pnpm-store
+coverage
+.tsbuildinfo
+*.tsbuildinfo
+
+# Go
+runtime/bin
+runtime/*.test
+runtime/*.out

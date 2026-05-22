@@ -1,0 +1,24 @@
+{
+  "name": "relay",
+  "private": true,
+  "version": "0.0.0",
+  "description": "The backend cloud for reliable AI agents.",
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "build": "pnpm -r build",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "db:migrate": "pnpm --filter @relay/db migrate",
+    "db:bootstrap": "pnpm --filter @relay/db bootstrap",
+    "db:keygen": "pnpm --filter @relay/db keygen",
+    "dev:control-plane": "pnpm --filter @relay/control-plane dev",
+    "dev:runtime": "cd runtime && go run ./cmd/runtime",
+    "dev:dashboard": "pnpm --filter @relay/dashboard dev",
+    "dev:web": "pnpm --filter @relay/web dev",
+    "example": "pnpm --filter @relay/example-hello-agent start",
+    "example:memory": "pnpm --filter @relay/example-memory-demo start"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
