@@ -5,6 +5,7 @@
 Memory, retries, tools, traces, and durable execution — without building
 orchestration infrastructure yourself.
 
+[![npm](https://img.shields.io/npm/v/@relayhq/sdk?label=%40relayhq%2Fsdk&color=emerald)](https://www.npmjs.com/package/@relayhq/sdk)
 [![License](https://img.shields.io/badge/license-Apache%202.0-emerald)](LICENSE)
 [![Status](https://img.shields.io/badge/status-alpha-amber)](#)
 
@@ -19,6 +20,18 @@ await agent.run("Review the last PR");
 
 Open source under Apache 2.0. Self-host with Docker Compose, or use the
 hosted version (waitlist soon).
+
+### Every run is a complete execution trace
+
+Tokens, tool calls, tool results, memory hits, errors — captured in order,
+ready for replay. Built-in dashboard at `localhost:3000`.
+
+![Dashboard — runs list](docs/screenshots/dashboard-list.png)
+
+Click into a run to see exactly what happened, including the model's mistakes
+and how it self-corrected:
+
+![Dashboard — execution trace](docs/screenshots/dashboard-trace.png)
 
 ---
 

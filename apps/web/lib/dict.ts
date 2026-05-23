@@ -36,6 +36,11 @@ export type Dict = {
     withLabel: string;
     withCaption: string;
   };
+  trace: {
+    title: string;
+    sub: string;
+    caption: string;
+  };
   cta: { title: string; sub: string; button: string };
   footer: {
     tagline: string;
@@ -105,6 +110,11 @@ const en: Dict = {
     ],
     withLabel: "With Relay",
     withCaption: "One SDK. Every provider. Memory, tools, traces, retries — built in.",
+  },
+  trace: {
+    title: "Every run is a complete execution trace.",
+    sub: "Tokens, tool calls, results, memory retrievals, errors — captured in order. Replay anything.",
+    caption: "Built-in dashboard. See exactly what the model did — including the mistakes it self-corrected.",
   },
   cta: {
     title: "Start building reliable agents.",
@@ -210,6 +220,11 @@ const es: Dict = {
     ],
     withLabel: "Con Relay",
     withCaption: "Un SDK. Todos los providers. Memoria, tools, traces, retries — built-in.",
+  },
+  trace: {
+    title: "Cada run es una execution trace completa.",
+    sub: "Tokens, tool calls, resultados, retrievals de memoria, errores — capturados en orden. Replay de cualquier cosa.",
+    caption: "Dashboard built-in. Ves exactamente lo que hizo el modelo — incluidos los errores que corrigió solo.",
   },
   cta: {
     title: "Empezá a construir agentes confiables.",

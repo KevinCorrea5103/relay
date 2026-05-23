@@ -141,6 +141,44 @@ export default async function LandingPage({
         </div>
       </section>
 
+      {/* Trace — visual proof */}
+      <section className="border-t border-ink-800/70 py-24">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="max-w-2xl">
+            <h2 className="font-mono text-3xl font-semibold tracking-tight text-ink-50 sm:text-4xl">
+              {d.trace.title}
+            </h2>
+            <p className="mt-3 text-ink-400">{d.trace.sub}</p>
+          </div>
+
+          <div className="mt-10 space-y-6">
+            <figure className="overflow-hidden rounded-lg border border-ink-800 bg-ink-900/40">
+              <div className="border-b border-ink-800 px-4 py-2 text-[10px] uppercase tracking-widest text-ink-500">
+                dashboard · /runs
+              </div>
+              <img
+                src="/screenshots/dashboard-list.png"
+                alt="Relay dashboard runs list"
+                className="w-full"
+              />
+            </figure>
+
+            <figure className="overflow-hidden rounded-lg border border-ink-800 bg-ink-900/40">
+              <div className="border-b border-ink-800 px-4 py-2 text-[10px] uppercase tracking-widest text-ink-500">
+                dashboard · execution trace
+              </div>
+              <img
+                src="/screenshots/dashboard-trace.png"
+                alt="Relay execution trace — tool calls and results in order"
+                className="w-full"
+              />
+            </figure>
+
+            <p className="text-sm text-ink-500">{d.trace.caption}</p>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="border-t border-ink-800/70 py-24">
         <div className="mx-auto max-w-3xl px-6 text-center">
