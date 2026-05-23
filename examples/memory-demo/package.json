@@ -1,5 +1,5 @@
 {
-  "name": "@relay/example-memory-demo",
+  "name": "@relayhq/example-memory-demo",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -7,7 +7,7 @@
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@relay/sdk": "workspace:*"
+    "@relayhq/sdk": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

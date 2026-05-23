@@ -1,4 +1,4 @@
-import { createAgent, builtin, tool, type ModelId } from "@relay/sdk";
+import { createAgent, builtin, tool, type ModelId } from "@relayhq/sdk";
 
 const users: Record<string, { name: string; tier: string; balanceUsd: number }> = {
   u_001: { name: "Ada Lovelace", tier: "pro", balanceUsd: 1480.5 },

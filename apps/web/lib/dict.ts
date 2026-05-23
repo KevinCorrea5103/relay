@@ -127,17 +127,17 @@ const en: Dict = {
       {
         title: "Install",
         body: "The SDK is a single package. For self-host, the whole stack is three services and Postgres.",
-        code: "pnpm add @relay/sdk\n# or\nnpm install @relay/sdk",
+        code: "pnpm add @relayhq/sdk\n# or\nnpm install @relayhq/sdk",
       },
       {
         title: "Your first agent",
         body: "Use a built-in model. Streaming events are an async iterable.",
-        code: `import { createAgent, builtin } from "@relay/sdk";\n\nconst agent = createAgent({\n  apiKey: process.env.RELAY_API_KEY,\n  model: "claude-sonnet-4-6",\n  tools: [builtin.calculator],\n});\n\nfor await (const e of agent.run("What is 23 * 47?")) {\n  if (e.type === "token") process.stdout.write(e.text);\n}`,
+        code: `import { createAgent, builtin } from "@relayhq/sdk";\n\nconst agent = createAgent({\n  apiKey: process.env.RELAY_API_KEY,\n  model: "claude-sonnet-4-6",\n  tools: [builtin.calculator],\n});\n\nfor await (const e of agent.run("What is 23 * 47?")) {\n  if (e.type === "token") process.stdout.write(e.text);\n}`,
       },
       {
         title: "Custom function tools",
         body: "Declare a schema and a handler. The handler runs in your process — Relay only orchestrates the call.",
-        code: `import { tool } from "@relay/sdk";\n\nconst getUser = tool({\n  name: "get_user",\n  description: "Look up a user by id",\n  inputSchema: {\n    type: "object",\n    properties: { id: { type: "string" } },\n    required: ["id"],\n  },\n  async handler({ id }: { id: string }) {\n    return db.users.findById(id);\n  },\n});`,
+        code: `import { tool } from "@relayhq/sdk";\n\nconst getUser = tool({\n  name: "get_user",\n  description: "Look up a user by id",\n  inputSchema: {\n    type: "object",\n    properties: { id: { type: "string" } },\n    required: ["id"],\n  },\n  async handler({ id }: { id: string }) {\n    return db.users.findById(id);\n  },\n});`,
       },
       {
         title: "Semantic memory",
@@ -232,17 +232,17 @@ const es: Dict = {
       {
         title: "Instalación",
         body: "El SDK es un solo paquete. Para self-host, todo el stack son tres servicios y Postgres.",
-        code: "pnpm add @relay/sdk\n# o\nnpm install @relay/sdk",
+        code: "pnpm add @relayhq/sdk\n# o\nnpm install @relayhq/sdk",
       },
       {
         title: "Tu primer agente",
         body: "Usá un modelo built-in. Los eventos de streaming son un async iterable.",
-        code: `import { createAgent, builtin } from "@relay/sdk";\n\nconst agent = createAgent({\n  apiKey: process.env.RELAY_API_KEY,\n  model: "claude-sonnet-4-6",\n  tools: [builtin.calculator],\n});\n\nfor await (const e of agent.run("¿Cuánto es 23 * 47?")) {\n  if (e.type === "token") process.stdout.write(e.text);\n}`,
+        code: `import { createAgent, builtin } from "@relayhq/sdk";\n\nconst agent = createAgent({\n  apiKey: process.env.RELAY_API_KEY,\n  model: "claude-sonnet-4-6",\n  tools: [builtin.calculator],\n});\n\nfor await (const e of agent.run("¿Cuánto es 23 * 47?")) {\n  if (e.type === "token") process.stdout.write(e.text);\n}`,
       },
       {
         title: "Function tools custom",
         body: "Declarás un schema y un handler. El handler corre en tu proceso — Relay solo orquesta la llamada.",
-        code: `import { tool } from "@relay/sdk";\n\nconst getUser = tool({\n  name: "get_user",\n  description: "Buscar un usuario por id",\n  inputSchema: {\n    type: "object",\n    properties: { id: { type: "string" } },\n    required: ["id"],\n  },\n  async handler({ id }: { id: string }) {\n    return db.users.findById(id);\n  },\n});`,
+        code: `import { tool } from "@relayhq/sdk";\n\nconst getUser = tool({\n  name: "get_user",\n  description: "Buscar un usuario por id",\n  inputSchema: {\n    type: "object",\n    properties: { id: { type: "string" } },\n    required: ["id"],\n  },\n  async handler({ id }: { id: string }) {\n    return db.users.findById(id);\n  },\n});`,
       },
       {
         title: "Memoria semántica",

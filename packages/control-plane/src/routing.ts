@@ -1,4 +1,4 @@
-import type { ProviderName } from "@relay/db";
+import type { ProviderName } from "@relayhq/db";
 
 export type RoutedModel = {
   provider: ProviderName;

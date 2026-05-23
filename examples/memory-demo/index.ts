@@ -1,4 +1,4 @@
-import { createAgent, type ModelId } from "@relay/sdk";
+import { createAgent, type ModelId } from "@relayhq/sdk";
 
 const model: ModelId = (process.env.RELAY_MODEL as ModelId) ?? "gpt-4o-mini";
 const namespace = process.env.RELAY_MEMORY_NAMESPACE ?? "demo-user-kevin";

@@ -85,7 +85,7 @@ importers:
 
   examples/hello-agent:
     dependencies:
-      '@relay/sdk':
+      '@relayhq/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
     devDependencies:
@@ -101,7 +101,7 @@ importers:
 
   examples/memory-demo:
     dependencies:
-      '@relay/sdk':
+      '@relayhq/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
     devDependencies:
@@ -120,7 +120,7 @@ importers:
       '@hono/node-server':
         specifier: ^1.13.0
         version: 1.19.14(hono@4.12.21)
-      '@relay/db':
+      '@relayhq/db':
         specifier: workspace:*
         version: link:../db
       hono:

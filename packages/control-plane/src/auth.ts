@@ -1,5 +1,5 @@
 import type { MiddlewareHandler } from "hono";
-import { authenticateApiKey } from "@relay/db";
+import { authenticateApiKey } from "@relayhq/db";
 
 export type AuthVars = {
   tenantId: string;

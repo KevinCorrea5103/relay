@@ -66,9 +66,9 @@ nothing decrypts. Generate one with `pnpm db:keygen`.
 
 ```
 packages/
-  sdk/             @relay/sdk
-  control-plane/   @relay/control-plane
-  db/              @relay/db (tenants, api-keys, credentials, runs, events)
+  sdk/             @relayhq/sdk
+  control-plane/   @relayhq/control-plane
+  db/              @relayhq/db (tenants, api-keys, credentials, runs, events)
 runtime/           Go: stateless agent loop + providers (anthropic, openai)
 apps/
   dashboard/       Next.js — internal observability (runs list + traces, :3000)
@@ -235,7 +235,7 @@ Builtins + custom function tools sit alongside each other. The developer's
 `handler` function runs in their own process; Relay just orchestrates.
 
 ```ts
-import { createAgent, builtin, tool } from "@relay/sdk";
+import { createAgent, builtin, tool } from "@relayhq/sdk";
 
 const getUser = tool({
   name: "get_user",

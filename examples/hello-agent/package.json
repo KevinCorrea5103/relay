@@ -1,5 +1,5 @@
 {
-  "name": "@relay/example-hello-agent",
+  "name": "@relayhq/example-hello-agent",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -7,7 +7,7 @@
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@relay/sdk": "workspace:*"
+    "@relayhq/sdk": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

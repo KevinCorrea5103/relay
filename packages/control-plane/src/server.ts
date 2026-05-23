@@ -18,7 +18,7 @@ import {
   resolveCredential,
   upsertCredential,
   type ProviderName,
-} from "@relay/db";
+} from "@relayhq/db";
 import { requireAuth, type AuthVars } from "./auth.js";
 import { injectMemory, storeTurn, DEFAULT_NAMESPACE } from "./memory.js";
 import { pendingTools } from "./pending-tools.js";

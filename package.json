@@ -10,15 +10,15 @@
     "build": "pnpm -r build",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
-    "db:migrate": "pnpm --filter @relay/db migrate",
-    "db:bootstrap": "pnpm --filter @relay/db bootstrap",
-    "db:keygen": "pnpm --filter @relay/db keygen",
-    "dev:control-plane": "pnpm --filter @relay/control-plane dev",
+    "db:migrate": "pnpm --filter @relayhq/db migrate",
+    "db:bootstrap": "pnpm --filter @relayhq/db bootstrap",
+    "db:keygen": "pnpm --filter @relayhq/db keygen",
+    "dev:control-plane": "pnpm --filter @relayhq/control-plane dev",
     "dev:runtime": "cd runtime && go run ./cmd/runtime",
-    "dev:dashboard": "pnpm --filter @relay/dashboard dev",
-    "dev:web": "pnpm --filter @relay/web dev",
-    "example": "pnpm --filter @relay/example-hello-agent start",
-    "example:memory": "pnpm --filter @relay/example-memory-demo start"
+    "dev:dashboard": "pnpm --filter @relayhq/dashboard dev",
+    "dev:web": "pnpm --filter @relayhq/web dev",
+    "example": "pnpm --filter @relayhq/example-hello-agent start",
+    "example:memory": "pnpm --filter @relayhq/example-memory-demo start"
   },
   "engines": {
     "node": ">=20"

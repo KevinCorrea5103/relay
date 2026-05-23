@@ -1,7 +1,34 @@
 {
-  "name": "@relay/sdk",
-  "version": "0.0.1",
-  "description": "Relay SDK — define and run AI agents.",
+  "name": "@relayhq/sdk",
+  "version": "0.1.0",
+  "description": "The backend cloud for reliable AI agents. Memory, retries, tools, traces and durable execution without building orchestration infrastructure yourself.",
+  "license": "Apache-2.0",
+  "author": "Relay Contributors",
+  "homepage": "https://github.com/KevinCorrea5103/relay#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KevinCorrea5103/relay.git",
+    "directory": "packages/sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/KevinCorrea5103/relay/issues"
+  },
+  "keywords": [
+    "ai",
+    "agents",
+    "llm",
+    "anthropic",
+    "openai",
+    "claude",
+    "gpt",
+    "tools",
+    "memory",
+    "streaming",
+    "function-calling",
+    "relay",
+    "infrastructure",
+    "durable-execution"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,10 +38,22 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "dev": "tsc -p tsconfig.json --watch"
+    "dev": "tsc -p tsconfig.json --watch",
+    "prepublishOnly": "tsc -p tsconfig.json"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "devDependencies": {
     "typescript": "^5.5.0"

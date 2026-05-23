@@ -3,7 +3,7 @@ import {
   resolveCredential,
   searchMemories,
   type MemoryWithScore,
-} from "@relay/db";
+} from "@relayhq/db";
 import { embed } from "./embeddings.js";
 
 export const DEFAULT_NAMESPACE = "default";
