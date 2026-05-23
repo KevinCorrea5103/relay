@@ -50,6 +50,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "prepublishOnly": "tsc -p tsconfig.json"
   },
   "engines": {

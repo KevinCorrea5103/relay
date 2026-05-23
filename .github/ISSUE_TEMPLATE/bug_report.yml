@@ -1,0 +1,80 @@
+name: Bug report
+description: Something is broken or behaving unexpectedly.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. The more specific you are, the faster we can
+        help. If you can reproduce the bug with a small snippet, paste it.
+
+  - type: input
+    id: version
+    attributes:
+      label: Relay version
+      description: Output of `npm view @relayhq/sdk version` or the commit SHA if self-hosting from main.
+      placeholder: "0.1.0 / commit a82695a"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of the stack is affected?
+      options:
+        - SDK (@relayhq/sdk)
+        - Control plane (Hono / Node)
+        - Runtime (Go)
+        - Dashboard
+        - Memory subsystem
+        - Custom function tools
+        - Bootstrap / dev workflow
+        - Documentation
+        - Other / unsure
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you do and what did you see?
+      placeholder: |
+        I ran `pnpm example` with RELAY_MODEL=gpt-4o-mini and it…
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: I expected the tool result to be passed back to the LLM…
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal repro
+      description: Code or commands that reproduce the issue. Trim secrets.
+      render: bash
+      placeholder: |
+        export RELAY_MODEL=gpt-4o-mini
+        pnpm example "..."
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs / trace
+      description: Output from the affected service. Use the dashboard's run trace when possible.
+      render: text
+
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: OS + Node + Go + Docker versions.
+      placeholder: "macOS 15.5 · Node 20.18 · Go 1.22 · Docker 28"
+    validations:
+      required: true

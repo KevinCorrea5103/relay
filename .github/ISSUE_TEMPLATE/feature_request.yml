@@ -1,0 +1,56 @@
+name: Feature request
+description: Suggest a new capability or improvement.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: check the [README roadmap](../../README.md) and the
+        existing [open issues](https://github.com/KevinCorrea5103/relay/issues).
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the friction or limitation you're hitting today.
+      placeholder: |
+        When I want to give an agent a Cohere model, I have to fork the runtime
+        because there's no Cohere provider…
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Sketch the API or behavior you'd want. Code snippets welcome.
+      placeholder: |
+        createAgent({ model: "cohere-command-r-plus", ... })
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What workarounds did you try? Why aren't they enough?
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope guess
+      description: How big do you think this is?
+      options:
+        - Small (single file / config flag)
+        - Medium (one package / new endpoint)
+        - Large (cross-cutting / new subsystem)
+        - Not sure
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I'd be willing to send a PR for this.

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions / discussion
+    url: https://github.com/KevinCorrea5103/relay/discussions
+    about: For open-ended questions, design discussion, or showing off what you built.
+  - name: Security disclosure
+    url: https://github.com/KevinCorrea5103/relay/security/advisories/new
+    about: Privately disclose a vulnerability. Do NOT open a public issue.
