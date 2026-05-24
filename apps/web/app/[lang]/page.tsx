@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Code } from "@/components/Code";
 import { Reveal } from "@/components/Reveal";
-import { Waitlist } from "@/components/Waitlist";
 import { dicts, isLocale, type Locale } from "@/lib/dict";
 
 const GITHUB_URL = "https://github.com/KevinCorrea5103/relay";
@@ -33,6 +32,11 @@ const COMPARE_CODE = `const agent = createAgent({
 })
 
 await agent.run("Review the last PR")`;
+
+const QUICKSTART_CODE = `git clone https://github.com/KevinCorrea5103/relay
+cd relay && pnpm install
+pnpm bootstrap   # mints keys, brings up Postgres, migrates
+pnpm dev         # runtime + control-plane + dashboard + web`;
 
 const BUILT_ON = [
   "Postgres",
@@ -95,7 +99,7 @@ export default async function LandingPage({
               <Reveal delay={0.24}>
                 <div className="mt-8 flex flex-wrap items-center gap-3">
                   <Link
-                    href={`/${lang}/login`}
+                    href={`/${lang}/docs/quickstart`}
                     className="group relative inline-flex items-center gap-2 rounded-md bg-emerald-500 px-5 py-2.5 text-sm font-medium text-ink-950 hover:bg-emerald-400 transition"
                   >
                     {d.hero.primary}
@@ -109,20 +113,21 @@ export default async function LandingPage({
                   >
                     {d.hero.secondary}
                   </a>
-                  <Link
-                    href={`/${lang}/docs`}
-                    className="px-2 py-2.5 text-sm text-ink-400 hover:text-ink-100 transition"
-                  >
-                    {d.hero.tertiary} →
-                  </Link>
                 </div>
               </Reveal>
 
               <Reveal delay={0.32}>
-                <div className="mt-6 inline-flex items-center gap-2 rounded-md border border-ink-800/70 bg-ink-950/60 px-3 py-1.5 font-mono text-xs text-ink-400">
+                <a
+                  href="https://www.npmjs.com/package/@relayhq/sdk"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-6 inline-flex items-center gap-2 rounded-md border border-ink-800/70 bg-ink-950/60 px-3 py-1.5 font-mono text-xs text-ink-400 hover:border-emerald-500/40 hover:text-ink-100 transition"
+                  title="View on npm"
+                >
                   <span className="text-emerald-400">$</span>
                   <span>{d.hero.install}</span>
-                </div>
+                  <span className="ml-1 text-ink-600">↗</span>
+                </a>
               </Reveal>
             </div>
 
@@ -264,6 +269,12 @@ export default async function LandingPage({
               </Reveal>
             ))}
           </div>
+
+          <Reveal delay={0.3}>
+            <div className="mt-10">
+              <Code code={QUICKSTART_CODE} lang="bash" fileName="quickstart.sh" />
+            </div>
+          </Reveal>
         </div>
       </section>
 
@@ -380,7 +391,7 @@ export default async function LandingPage({
         </div>
       </section>
 
-      {/* ─── CTA + Waitlist ───────────────────────────────────────────────── */}
+      {/* ─── CTA (self-host only) ─────────────────────────────────────────── */}
       <section className="relative border-t border-ink-800/40 py-28 overflow-hidden">
         <div className="absolute inset-x-0 top-0 -z-10 h-72 bg-gradient-to-b from-emerald-500/[0.07] to-transparent" />
         <div className="mx-auto max-w-3xl px-6 text-center">
@@ -397,26 +408,27 @@ export default async function LandingPage({
           </Reveal>
 
           <Reveal delay={0.24}>
-            <div className="mx-auto mt-10 max-w-md">
-              <Waitlist
-                placeholder={d.cta.waitlistPlaceholder}
-                button={d.cta.waitlistButton}
-                footnote={d.cta.waitlistFootnote}
-              />
-              <p className="mt-3 text-xs text-ink-600">{d.cta.waitlistFootnote}</p>
+            <div className="mt-10 inline-flex items-center gap-2 rounded-md border border-ink-800/70 bg-ink-950/80 px-4 py-3 font-mono text-sm text-ink-200">
+              <span className="text-emerald-400">$</span>
+              <span>git clone https://github.com/KevinCorrea5103/relay</span>
             </div>
           </Reveal>
 
           <Reveal delay={0.32}>
-            <div className="mt-10 flex items-center justify-center gap-2 text-sm text-ink-500">
-              <span>or</span>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              <Link
+                href={`/${lang}/docs/quickstart`}
+                className="rounded-md bg-emerald-500 px-5 py-3 text-sm font-medium text-ink-950 hover:bg-emerald-400 transition"
+              >
+                {d.cta.primary} →
+              </Link>
               <a
                 href={GITHUB_URL}
                 target="_blank"
                 rel="noreferrer"
-                className="text-ink-200 hover:text-emerald-300 transition"
+                className="rounded-md border border-ink-700 bg-ink-900/40 px-5 py-3 text-sm font-medium text-ink-200 hover:border-ink-500 hover:text-ink-50 transition"
               >
-                self-host today →
+                ★ {d.cta.secondary}
               </a>
             </div>
           </Reveal>

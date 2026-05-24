@@ -14,10 +14,9 @@ export type Dict = {
   meta: { title: string; description: string };
   nav: {
     docs: string;
-    login: string;
-    dashboard: string;
     github: string;
     star: string;
+    dashboard: string;
   };
   hero: {
     badge: string;
@@ -25,18 +24,11 @@ export type Dict = {
     sub: string;
     primary: string;
     secondary: string;
-    tertiary: string;
     codeCaption: string;
     install: string;
   };
-  builtOn: {
-    title: string;
-  };
-  why: {
-    eyebrow: string;
-    title: string;
-    body: string;
-  };
+  builtOn: { title: string };
+  why: { eyebrow: string; title: string; body: string };
   compare: {
     eyebrow: string;
     title: string;
@@ -73,32 +65,14 @@ export type Dict = {
     eyebrow: string;
     title: string;
     sub: string;
-    waitlistPlaceholder: string;
-    waitlistButton: string;
-    waitlistFootnote: string;
+    primary: string;
+    secondary: string;
   };
   footer: {
     tagline: string;
     license: string;
-    product: string;
     productLinks: { docs: string; github: string };
-    company: string;
-    companyLinks: { contact: string };
     copyright: string;
-  };
-  docs: {
-    title: string;
-    sub: string;
-    sections: { title: string; body: string; code?: string }[];
-  };
-  login: {
-    title: string;
-    sub: string;
-    label: string;
-    placeholder: string;
-    button: string;
-    hint: string;
-    saved: string;
   };
 };
 
@@ -106,28 +80,19 @@ const en: Dict = {
   meta: {
     title: "Relay — the backend cloud for reliable AI agents",
     description:
-      "Memory, retries, tools, traces, and durable execution — without building orchestration infrastructure yourself.",
+      "Memory, retries, tools, traces, and durable execution — without building orchestration infrastructure yourself. Open source under Apache 2.0.",
   },
-  nav: {
-    docs: "Docs",
-    login: "Login",
-    dashboard: "Dashboard",
-    github: "GitHub",
-    star: "Star",
-  },
+  nav: { docs: "Docs", github: "GitHub", star: "Star", dashboard: "Dashboard" },
   hero: {
     badge: "Open source · Apache 2.0",
     title: "The backend cloud for reliable AI agents.",
-    sub: "Memory, retries, tools, traces, and durable execution — without building orchestration infrastructure yourself.",
-    primary: "Start building",
+    sub: "Memory, retries, tools, traces, and durable execution — without building orchestration infrastructure yourself. Self-host the whole stack in three commands.",
+    primary: "Quickstart",
     secondary: "View on GitHub",
-    tertiary: "Documentation",
     codeCaption: "agent.ts",
     install: "npm i @relayhq/sdk",
   },
-  builtOn: {
-    title: "Built on boring, battle-tested infra",
-  },
+  builtOn: { title: "Built on boring, battle-tested infra" },
   why: {
     eyebrow: "The problem",
     title: "AI apps fail in production because orchestration is unreliable.",
@@ -154,12 +119,12 @@ const en: Dict = {
   },
   how: {
     eyebrow: "How it works",
-    title: "Three steps from `npm install` to a streaming, traced, memory-aware agent.",
-    sub: "Self-host with Docker Compose, or use the hosted cloud (beta).",
+    title: "Three steps from `git clone` to a streaming, traced, memory-aware agent.",
+    sub: "Self-host with Docker Compose. The whole stack on your laptop in two minutes.",
     steps: [
       {
-        title: "Define the agent",
-        body: "Declare your model, tools (built-in or your own functions), and whether you want memory. That's the whole config.",
+        title: "Clone and bootstrap",
+        body: "git clone, pnpm bootstrap. Idempotent — generates keys, brings up Postgres, applies migrations, mints your API key.",
       },
       {
         title: "Bring your own keys",
@@ -205,8 +170,8 @@ const en: Dict = {
         body: "API keys scope every read. Runs, memories, credentials — all tagged with their tenant. Multi-tenancy from day one.",
       },
       {
-        title: "Self-host or cloud",
-        body: "Three services and one Postgres. Run it on your laptop with Docker, on your infra, or use the managed cloud.",
+        title: "100% self-host",
+        body: "Three services and one Postgres. Run it on your laptop with Docker, or in your own cloud. No vendor in the loop.",
       },
     ],
   },
@@ -226,11 +191,11 @@ const en: Dict = {
       },
       {
         q: "Do you take a cut of my tokens?",
-        a: "No. Relay is BYOK by design — you upload your own Anthropic / OpenAI keys and pay providers directly. We never proxy billing.",
+        a: "No. Relay is BYOK by design — you upload your own Anthropic / OpenAI keys and pay providers directly. There's no proxied billing because there's no managed service in the loop.",
       },
       {
-        q: "Can I self-host?",
-        a: "Yes. The whole stack is three services and Postgres. Docker Compose locally; the same Go binary and Node service in production.",
+        q: "Is there a hosted version?",
+        a: "Not yet. Relay is self-host only today: clone, docker compose up, bootstrap. The architecture is built so a managed cloud can be added later without changing the SDK contract.",
       },
       {
         q: "What's the lock-in?",
@@ -238,71 +203,22 @@ const en: Dict = {
       },
       {
         q: "What's coming next?",
-        a: "Durable execution (resumable agents across crashes), human-in-the-loop checkpoints, voice agents, and a managed cloud with usage-based billing on top of BYOK.",
+        a: "Durable execution (resumable agents across crashes), human-in-the-loop checkpoints, multi-agent orchestration, voice agents.",
       },
     ],
   },
   cta: {
-    eyebrow: "Get early access",
-    title: "Build the agent. Skip the plumbing.",
-    sub: "Self-host today, or join the cloud beta — we'll email you when it opens.",
-    waitlistPlaceholder: "you@startup.com",
-    waitlistButton: "Join the waitlist",
-    waitlistFootnote: "No spam. One email when the cloud is live.",
+    eyebrow: "Get started",
+    title: "Run it on your machine in two minutes.",
+    sub: "Three commands. No signup. No waitlist. No vendor.",
+    primary: "Read the quickstart",
+    secondary: "Star on GitHub",
   },
   footer: {
     tagline: "The backend cloud for reliable AI agents.",
     license: "Apache 2.0",
-    product: "Product",
     productLinks: { docs: "Docs", github: "GitHub" },
-    company: "Project",
-    companyLinks: { contact: "Contact" },
     copyright: "© Relay Contributors. Apache 2.0.",
-  },
-  docs: {
-    title: "Documentation",
-    sub: "Ship a streaming, traced, memory-aware agent in fifteen minutes.",
-    sections: [
-      {
-        title: "Install",
-        body: "The SDK is a single package. For self-host, the whole stack is three services and Postgres.",
-        code: "pnpm add @relayhq/sdk\n# or\nnpm install @relayhq/sdk",
-      },
-      {
-        title: "Your first agent",
-        body: "Use a built-in model. Streaming events are an async iterable.",
-        code: `import { createAgent, builtin } from "@relayhq/sdk";\n\nconst agent = createAgent({\n  apiKey: process.env.RELAY_API_KEY,\n  model: "claude-sonnet-4-6",\n  tools: [builtin.calculator],\n});\n\nfor await (const e of agent.run("What is 23 * 47?")) {\n  if (e.type === "token") process.stdout.write(e.text);\n}`,
-      },
-      {
-        title: "Custom function tools",
-        body: "Declare a schema and a handler. The handler runs in your process — Relay only orchestrates the call.",
-        code: `import { tool } from "@relayhq/sdk";\n\nconst getUser = tool({\n  name: "get_user",\n  description: "Look up a user by id",\n  inputSchema: {\n    type: "object",\n    properties: { id: { type: "string" } },\n    required: ["id"],\n  },\n  async handler({ id }: { id: string }) {\n    return db.users.findById(id);\n  },\n});`,
-      },
-      {
-        title: "Semantic memory",
-        body: "Pass `memory: { namespace }` and the agent recalls relevant past turns automatically.",
-        code: `const agent = createAgent({\n  model: "gpt-4o-mini",\n  memory: { namespace: \`user:\${userId}\` },\n});`,
-      },
-      {
-        title: "Bring your own keys",
-        body: "Upload provider credentials once. Relay encrypts them with AES-256-GCM and decrypts on demand.",
-        code: `curl -X PUT $RELAY_URL/v1/credentials/openai \\\n  -H "authorization: Bearer $RELAY_API_KEY" \\\n  -d '{"apiKey":"sk-..."}'`,
-      },
-      {
-        title: "Self-host",
-        body: "Clone, docker compose up, bootstrap. Same code in dev and prod.",
-        code: "git clone https://github.com/KevinCorrea5103/relay\npnpm db:up && pnpm db:migrate\npnpm db:bootstrap\npnpm dev:runtime & pnpm dev:control-plane & pnpm dev:dashboard",
-      },
-    ],
-  },
-  login: {
-    title: "Sign in",
-    sub: "Enter the Relay API key you got from `pnpm db:bootstrap` when self-hosting.",
-    label: "API key",
-    placeholder: "relay_live_…",
-    button: "Continue to dashboard",
-    hint: "Don't have one yet? Self-host the stack to mint a key, or join the cloud waitlist on the home page.",
-    saved: "Stored locally. Redirecting…",
   },
 };
 
@@ -310,28 +226,19 @@ const es: Dict = {
   meta: {
     title: "Relay — el cloud backend para agentes de IA confiables",
     description:
-      "Memoria, retries, tools, traces y durable execution — sin construir vos la infraestructura de orquestación.",
+      "Memoria, retries, tools, traces y durable execution — sin construir vos la infraestructura de orquestación. Open source bajo Apache 2.0.",
   },
-  nav: {
-    docs: "Docs",
-    login: "Login",
-    dashboard: "Dashboard",
-    github: "GitHub",
-    star: "Star",
-  },
+  nav: { docs: "Docs", github: "GitHub", star: "Star", dashboard: "Dashboard" },
   hero: {
     badge: "Open source · Apache 2.0",
     title: "El cloud backend para agentes de IA confiables.",
-    sub: "Memoria, retries, tools, traces y durable execution — sin construir vos la infraestructura de orquestación.",
-    primary: "Empezar",
+    sub: "Memoria, retries, tools, traces y durable execution — sin construir vos la infraestructura de orquestación. Self-host de todo el stack en tres comandos.",
+    primary: "Quickstart",
     secondary: "Ver en GitHub",
-    tertiary: "Documentación",
     codeCaption: "agent.ts",
     install: "npm i @relayhq/sdk",
   },
-  builtOn: {
-    title: "Construido sobre infra aburrida y probada",
-  },
+  builtOn: { title: "Construido sobre infra aburrida y probada" },
   why: {
     eyebrow: "El problema",
     title: "Las apps de IA fallan en producción porque la orquestación no es confiable.",
@@ -358,12 +265,12 @@ const es: Dict = {
   },
   how: {
     eyebrow: "Cómo funciona",
-    title: "Tres pasos desde `npm install` hasta un agente con streaming, traces y memoria.",
-    sub: "Self-host con Docker Compose, o usá el cloud managed (beta).",
+    title: "Tres pasos desde `git clone` hasta un agente con streaming, traces y memoria.",
+    sub: "Self-host con Docker Compose. Todo el stack en tu laptop en dos minutos.",
     steps: [
       {
-        title: "Definí el agente",
-        body: "Declarás modelo, tools (builtins o funciones tuyas), y si querés memoria. Esa es toda la config.",
+        title: "Cloná y bootstrappeá",
+        body: "git clone, pnpm bootstrap. Idempotente — genera keys, levanta Postgres, aplica migrations, mintea tu API key.",
       },
       {
         title: "Traé tus propias keys",
@@ -409,8 +316,8 @@ const es: Dict = {
         body: "Las API keys scopean cada lectura. Runs, memorias, credenciales — todo etiquetado con su tenant. Multi-tenancy desde día uno.",
       },
       {
-        title: "Self-host o cloud",
-        body: "Tres servicios y un Postgres. Corré en tu laptop con Docker, en tu infra, o usá el cloud managed.",
+        title: "100% self-host",
+        body: "Tres servicios y un Postgres. Corré en tu laptop con Docker, o en tu propia cloud. Sin vendor en el medio.",
       },
     ],
   },
@@ -430,11 +337,11 @@ const es: Dict = {
       },
       {
         q: "¿Se quedan con un porcentaje de mis tokens?",
-        a: "No. Relay es BYOK por diseño — subís tus propias keys de Anthropic / OpenAI y le pagás a los providers directo. Nunca proxeamos billing.",
+        a: "No. Relay es BYOK por diseño — subís tus propias keys de Anthropic / OpenAI y le pagás a los providers directo. No hay billing proxeado porque no hay servicio managed en el medio.",
       },
       {
-        q: "¿Puedo self-hostear?",
-        a: "Sí. Todo el stack son tres servicios y Postgres. Docker Compose en local; el mismo binario de Go y servicio de Node en producción.",
+        q: "¿Hay versión hosteada?",
+        a: "Todavía no. Relay es self-host únicamente hoy: clone, docker compose up, bootstrap. La arquitectura está construida para que un cloud managed se pueda agregar después sin romper el contrato del SDK.",
       },
       {
         q: "¿Qué lock-in hay?",
@@ -442,71 +349,22 @@ const es: Dict = {
       },
       {
         q: "¿Qué viene?",
-        a: "Durable execution (agentes resumibles ante crashes), checkpoints de human-in-the-loop, voice agents, y una cloud managed con billing usage-based sobre BYOK.",
+        a: "Durable execution (agentes resumibles ante crashes), checkpoints de human-in-the-loop, multi-agent orchestration, voice agents.",
       },
     ],
   },
   cta: {
-    eyebrow: "Early access",
-    title: "Construí el agente. Saltate la plomería.",
-    sub: "Self-host hoy, o subite a la beta del cloud — te avisamos por email cuando abra.",
-    waitlistPlaceholder: "vos@startup.com",
-    waitlistButton: "Sumarme a la waitlist",
-    waitlistFootnote: "Cero spam. Un email cuando el cloud esté listo.",
+    eyebrow: "Empezá",
+    title: "Corré todo en tu máquina en dos minutos.",
+    sub: "Tres comandos. Sin signup. Sin waitlist. Sin vendor.",
+    primary: "Leer el quickstart",
+    secondary: "Dar Star en GitHub",
   },
   footer: {
     tagline: "El cloud backend para agentes de IA confiables.",
     license: "Apache 2.0",
-    product: "Producto",
     productLinks: { docs: "Docs", github: "GitHub" },
-    company: "Proyecto",
-    companyLinks: { contact: "Contacto" },
     copyright: "© Relay Contributors. Apache 2.0.",
-  },
-  docs: {
-    title: "Documentación",
-    sub: "Lanzá un agente con streaming, traces y memoria en quince minutos.",
-    sections: [
-      {
-        title: "Instalación",
-        body: "El SDK es un solo paquete. Para self-host, todo el stack son tres servicios y Postgres.",
-        code: "pnpm add @relayhq/sdk\n# o\nnpm install @relayhq/sdk",
-      },
-      {
-        title: "Tu primer agente",
-        body: "Usá un modelo built-in. Los eventos de streaming son un async iterable.",
-        code: `import { createAgent, builtin } from "@relayhq/sdk";\n\nconst agent = createAgent({\n  apiKey: process.env.RELAY_API_KEY,\n  model: "claude-sonnet-4-6",\n  tools: [builtin.calculator],\n});\n\nfor await (const e of agent.run("¿Cuánto es 23 * 47?")) {\n  if (e.type === "token") process.stdout.write(e.text);\n}`,
-      },
-      {
-        title: "Function tools custom",
-        body: "Declarás un schema y un handler. El handler corre en tu proceso — Relay solo orquesta la llamada.",
-        code: `import { tool } from "@relayhq/sdk";\n\nconst getUser = tool({\n  name: "get_user",\n  description: "Buscar un usuario por id",\n  inputSchema: {\n    type: "object",\n    properties: { id: { type: "string" } },\n    required: ["id"],\n  },\n  async handler({ id }: { id: string }) {\n    return db.users.findById(id);\n  },\n});`,
-      },
-      {
-        title: "Memoria semántica",
-        body: "Pasás `memory: { namespace }` y el agente recuerda turnos pasados relevantes automáticamente.",
-        code: `const agent = createAgent({\n  model: "gpt-4o-mini",\n  memory: { namespace: \`user:\${userId}\` },\n});`,
-      },
-      {
-        title: "Bring your own keys",
-        body: "Subís credenciales de provider una sola vez. Relay las encripta con AES-256-GCM y las desencripta on demand.",
-        code: `curl -X PUT $RELAY_URL/v1/credentials/openai \\\n  -H "authorization: Bearer $RELAY_API_KEY" \\\n  -d '{"apiKey":"sk-..."}'`,
-      },
-      {
-        title: "Self-host",
-        body: "Clone, docker compose up, bootstrap. El mismo código en dev y prod.",
-        code: "git clone https://github.com/KevinCorrea5103/relay\npnpm db:up && pnpm db:migrate\npnpm db:bootstrap\npnpm dev:runtime & pnpm dev:control-plane & pnpm dev:dashboard",
-      },
-    ],
-  },
-  login: {
-    title: "Iniciar sesión",
-    sub: "Ingresá la API key de Relay que sacaste con `pnpm db:bootstrap` al self-hostear.",
-    label: "API key",
-    placeholder: "relay_live_…",
-    button: "Continuar al dashboard",
-    hint: "¿Todavía no tenés una? Self-host para mintar una key, o subite a la waitlist del cloud en la home.",
-    saved: "Guardado local. Redirigiendo…",
   },
 };
 

@@ -6,7 +6,6 @@ import { Wordmark } from "@/components/Logo";
 import { dicts, isLocale, locales, type Locale } from "@/lib/dict";
 
 const GITHUB_URL = "https://github.com/KevinCorrea5103/relay";
-const DASHBOARD_URL = "http://localhost:3000";
 
 export async function generateStaticParams() {
   return locales.map((lang) => ({ lang }));
@@ -44,7 +43,7 @@ export default async function LocaleLayout({
           <nav className="flex items-center gap-7 text-sm text-ink-400">
             <Link
               href={`/${lang}/docs`}
-              className="hidden sm:inline hover:text-ink-100 transition"
+              className="hover:text-ink-100 transition"
             >
               {d.nav.docs}
             </Link>
@@ -56,12 +55,6 @@ export default async function LocaleLayout({
             >
               {d.nav.github}
             </a>
-            <Link
-              href={`/${lang}/login`}
-              className="hover:text-ink-100 transition"
-            >
-              {d.nav.login}
-            </Link>
             <a
               href={GITHUB_URL}
               target="_blank"
@@ -88,11 +81,21 @@ export default async function LocaleLayout({
             <Link href={`/${lang}/docs`} className="hover:text-ink-200 transition">
               {d.footer.productLinks.docs}
             </Link>
-            <a href={GITHUB_URL} className="hover:text-ink-200 transition">
+            <a
+              href={GITHUB_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-ink-200 transition"
+            >
               {d.footer.productLinks.github}
             </a>
-            <a href={DASHBOARD_URL} className="hover:text-ink-200 transition">
-              {d.nav.dashboard}
+            <a
+              href="https://www.npmjs.com/package/@relayhq/sdk"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-ink-200 transition"
+            >
+              npm
             </a>
             <span className="text-ink-700">·</span>
             <LocaleSwitcher current={lang as Locale} />
