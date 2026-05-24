@@ -55,6 +55,22 @@ const internalAuth: MiddlewareHandler = async (c, next) => {
 const app = new Hono<{ Variables: AuthVars }>();
 app.use("*", cors());
 
+app.get("/", (c) =>
+  c.json({
+    name: "Relay API",
+    description: "The backend cloud for reliable AI agents.",
+    docs: "https://relaygh.dev/en/docs/api",
+    landing: "https://relaygh.dev",
+    repo: "https://github.com/KevinCorrea5103/relay",
+    sdk: "https://www.npmjs.com/package/@relayhq/sdk",
+    endpoints: {
+      health: "/health",
+      signup: "POST /v1/signup",
+      runs: "POST /v1/runs (auth required)",
+    },
+  }),
+);
+
 app.get("/health", (c) => c.json({ ok: true }));
 
 app.get(
