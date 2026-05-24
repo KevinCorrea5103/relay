@@ -1,0 +1,57 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "relayhq"
+version = "0.1.0"
+description = "The backend cloud for reliable AI agents. Memory, retries, tools, traces and durable execution without building orchestration infrastructure yourself."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.9"
+authors = [{ name = "Relay Contributors" }]
+keywords = [
+  "ai",
+  "agents",
+  "llm",
+  "anthropic",
+  "openai",
+  "claude",
+  "gpt",
+  "tools",
+  "memory",
+  "streaming",
+  "relay",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Libraries",
+]
+dependencies = [
+  "httpx>=0.27.0",
+]
+
+[project.urls]
+Homepage = "https://relaygh.dev"
+Repository = "https://github.com/KevinCorrea5103/relay"
+Documentation = "https://relaygh.dev/en/docs"
+Issues = "https://github.com/KevinCorrea5103/relay/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["relayhq"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/relayhq",
+  "/README.md",
+  "/LICENSE",
+]
