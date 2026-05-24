@@ -1,10 +1,43 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 
 export const metadata: Metadata = {
-  title: "Relay — the cloud runtime for reliable AI agents",
+  metadataBase: new URL("https://relay-cloud.vercel.app"),
+  title: {
+    default: "Relay — the backend cloud for reliable AI agents",
+    template: "%s · Relay",
+  },
   description:
-    "Build, deploy and observe AI agents like you build apps. Multi-provider, persistent traces, semantic memory, custom tools, BYOK.",
+    "Memory, retries, tools, traces, and durable execution — without building orchestration infrastructure yourself.",
+  keywords: [
+    "ai agents",
+    "ai infrastructure",
+    "llm",
+    "anthropic",
+    "openai",
+    "function calling",
+    "agent memory",
+    "open source",
+    "relay",
+  ],
+  authors: [{ name: "Relay Contributors" }],
+  creator: "Relay",
+  openGraph: {
+    type: "website",
+    title: "Relay — the backend cloud for reliable AI agents",
+    description:
+      "Memory, retries, tools, traces, and durable execution — without building orchestration infrastructure yourself.",
+    siteName: "Relay",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Relay — the backend cloud for reliable AI agents",
+    description:
+      "Memory, retries, tools, traces, and durable execution — without building orchestration infrastructure yourself.",
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({
@@ -13,7 +46,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${GeistSans.variable} ${GeistMono.variable}`}
+      suppressHydrationWarning
+    >
       <body className="font-sans antialiased min-h-screen flex flex-col">
         {children}
       </body>

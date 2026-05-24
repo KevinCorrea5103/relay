@@ -1,25 +1,26 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./lib/**/*.{ts,tsx}"],
+  content: [
+    "./app/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./lib/**/*.{ts,tsx}",
+  ],
   theme: {
     extend: {
       fontFamily: {
+        sans: [
+          "var(--font-geist-sans)",
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif",
+        ],
         mono: [
+          "var(--font-geist-mono)",
           "ui-monospace",
           "SFMono-Regular",
           "Menlo",
-          "Monaco",
-          "Consolas",
           "monospace",
-        ],
-        sans: [
-          "ui-sans-serif",
-          "-apple-system",
-          "BlinkMacSystemFont",
-          "Inter",
-          "system-ui",
-          "sans-serif",
         ],
       },
       colors: {
@@ -35,6 +36,22 @@ const config: Config = {
           800: "#1e293b",
           900: "#0f172a",
           950: "#020617",
+          975: "#010410",
+        },
+      },
+      animation: {
+        "fade-up": "fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both",
+        "shine": "shine 8s linear infinite",
+        "pulse-slow": "pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+      },
+      keyframes: {
+        "fade-up": {
+          from: { opacity: "0", transform: "translateY(12px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        shine: {
+          from: { backgroundPosition: "200% center" },
+          to: { backgroundPosition: "-200% center" },
         },
       },
     },

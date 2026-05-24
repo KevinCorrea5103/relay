@@ -3,14 +3,21 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
   html,
   body {
-    background-color: theme(colors.ink.950);
+    background-color: theme(colors.ink.975);
     color: theme(colors.ink.100);
   }
   ::selection {
     background: theme(colors.emerald.500 / 30%);
+    color: theme(colors.emerald.100);
   }
+  /* Hide scrollbar while keeping scroll for marquee strips */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }
 
 @layer components {
@@ -22,7 +29,36 @@
     background-position: -1px -1px;
   }
   .fade-mask {
-    mask-image: radial-gradient(circle at center, black 30%, transparent 70%);
-    -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 70%);
+    mask-image: radial-gradient(circle at center, black 30%, transparent 75%);
+    -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 75%);
   }
+  .text-gradient {
+    background: linear-gradient(
+      90deg,
+      theme(colors.ink.50),
+      theme(colors.ink.300),
+      theme(colors.ink.50)
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .ring-glow {
+    box-shadow:
+      0 0 0 1px theme(colors.emerald.500 / 30%),
+      0 0 20px theme(colors.emerald.500 / 10%);
+  }
+}
+
+/* Shiki overrides — match our dark palette */
+pre.shiki {
+  background-color: theme(colors.ink.950) !important;
+  padding: 1rem 1.25rem;
+  font-size: 13px;
+  line-height: 1.65;
+  overflow-x: auto;
+}
+pre.shiki code {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
 }
