@@ -1,5 +1,31 @@
 import { Code } from "@/components/Code";
 import { Callout, DocsPage, H2, H3, InlineCode, P } from "@/components/DocsPage";
+import { Mermaid } from "@/components/Mermaid";
+
+const CALLBACK_DIAGRAM = `sequenceDiagram
+    autonumber
+    participant SDK
+    participant CP as Control plane
+    participant RT as Runtime
+    participant LLM
+
+    SDK->>CP: POST /v1/runs
+    CP->>RT: POST /runs (with credentials)
+    RT->>LLM: stream messages
+    LLM-->>RT: tool_use
+    RT-->>CP: SSE: tool_call event
+    Note over CP: persist event
+    CP-->>SDK: tool_call event
+    RT->>CP: GET /internal/tool-result (long-poll)
+    Note over SDK: run handler in your process
+    SDK->>CP: POST /v1/runs/:id/tool-results/:toolUseId
+    CP-->>RT: resolves long-poll with output
+    RT->>LLM: continue with tool result
+    RT-->>CP: SSE: tool_result event
+    CP-->>SDK: tool_result event
+    LLM-->>RT: done
+    RT-->>CP: SSE: done event
+    CP-->>SDK: done event`;
 
 export default async function ToolsDocs({
   params,
@@ -100,10 +126,7 @@ export default async function ToolsDocs({
           Custom tools work through a long-poll callback — the runtime
           orchestrates, but execution stays in your process. End-to-end:
         </P>
-        <Code
-          lang="text"
-          code={`SDK                       control-plane                runtime                LLM\n │── POST /v1/runs ─────────►│                            │                    │\n │                            │── POST /runs ─────────────►│                    │\n │                            │                            │── stream ─────────►│\n │                            │                            │◄── tool_use ──────│\n │                            │◄── SSE: tool_call ────────│                    │\n │◄── tool_call event ───────│   (persisted)             │── GET /internal/   │\n │                            │                            │     tool-result   │\n │   (SDK runs handler        │                            │   (long-poll)     │\n │    locally)                │                            │                    │\n │── POST tool-results ──────►│                            │                    │\n │                            │── resolves long-poll ─────►│                    │\n │                            │                            │── stream ─────────►│\n │                            │◄── SSE: tool_result ──────│                    │\n │◄── tool_result event ─────│                            │                    │\n │                            │                            │◄── done ──────────│\n │◄── done ──────────────────│                            │                    │`}
-        />
+        <Mermaid chart={CALLBACK_DIAGRAM} caption="callback flow" />
         <P>
           The runtime stays stateless. The SDK never talks to the runtime
           directly. Every event is persisted in <InlineCode>run_events</InlineCode>{" "}

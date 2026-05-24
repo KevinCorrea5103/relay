@@ -1,5 +1,53 @@
 import { Code } from "@/components/Code";
 import { Callout, DocsPage, H2, H3, InlineCode, P } from "@/components/DocsPage";
+import { Mermaid } from "@/components/Mermaid";
+
+const STACK_DIAGRAM = `flowchart TD
+    Caller["caller<br/>SDK / curl"]
+    CP["control-plane<br/>(TS / Hono · :4000)<br/>auth · BYOK · persistence"]
+    DB[("Postgres + pgvector")]
+    RT["runtime<br/>(Go · :4100)<br/>stateless agent loop"]
+    A["Anthropic"]
+    O["OpenAI"]
+    Co["OpenAI-compatible<br/>(Ollama · vLLM · ...)"]
+    Dash["dashboard<br/>(Next.js · :3000)"]
+    Web["web<br/>(Next.js · :3001)"]
+
+    Caller -- "Bearer relay_live_…" --> CP
+    CP <--> DB
+    CP -- "POST /runs (with creds)" --> RT
+    RT -. "long-poll callbacks" .-> CP
+    RT --> A
+    RT --> O
+    RT --> Co
+    Dash --> CP
+    Web --> CP`;
+
+const RUN_FLOW_DIAGRAM = `sequenceDiagram
+    autonumber
+    participant SDK
+    participant CP as Control plane
+    participant DB as Postgres
+    participant RT as Runtime
+    participant LLM
+
+    SDK->>CP: POST /v1/runs (auth + tools + memory + input)
+    CP->>CP: resolve tenant from API key
+    CP->>DB: fetch + decrypt provider credential
+    Note over CP: if memory: embed input, top-K query,<br/>inject into system prompt
+    CP->>DB: create runs row
+    CP->>RT: POST /runs (tools + creds + runId)
+    RT->>LLM: stream messages
+    LLM-->>RT: tokens / tool_use
+    Note over RT: for each tool_use:<br/>builtin → execute locally<br/>custom → long-poll CP
+    RT-->>CP: SSE: events
+    CP->>DB: persist each event
+    CP-->>SDK: stream events through
+    Note over SDK: if custom tool:<br/>run handler, POST result
+    LLM-->>RT: done
+    RT-->>CP: done event
+    CP->>DB: complete run + store memory turn
+    CP-->>SDK: done event`;
 
 export default async function ArchitectureDocs({
   params,
@@ -17,10 +65,7 @@ export default async function ArchitectureDocs({
     >
       <section>
         <H2 id="overview">The whole stack</H2>
-        <Code
-          lang="text"
-          code={`caller (SDK / curl) ── Authorization: Bearer relay_live_…\n     │\n     ▼\ncontrol-plane (TS / Hono, :4000)         ──►  Postgres + pgvector\n     │   auth, BYOK, runs, events, memories\n     │   tees every SSE event to disk\n     ▼\nruntime (Go, :4100)                       ──►  Anthropic / OpenAI / compatible\n     │   stateless agent loop\n     │   long-polls control plane for custom tool results\n\ndashboard (Next.js, :3000) ──► control-plane (uses RELAY_API_KEY)\nweb       (Next.js, :3001) ──► you're reading it`}
-        />
+        <Mermaid chart={STACK_DIAGRAM} caption="three services + one Postgres" />
       </section>
 
       <section>
@@ -141,10 +186,7 @@ export default async function ArchitectureDocs({
 
       <section>
         <H2 id="data-flow">A run, end to end</H2>
-        <Code
-          lang="text"
-          code={`1. SDK         POST /v1/runs (auth + tools + memory + input)\n2. Control     authenticate → resolve tenant\n3. Control     resolve provider credential (decrypt)\n4. Control     if memory: embed input → query top-K → inject into system prompt\n5. Control     create runs row (status=running, seq=0 reserved for memory)\n6. Control     POST /runs to runtime with: tools + credentials + runId\n7. Runtime     build LLM tool list (builtin schemas + custom schemas)\n8. Runtime     stream LLM response\n9. Runtime     for each tool_use:\n               - if builtin → execute locally\n               - if custom  → long-poll control plane for result\n10. SDK        receives tool_call event → runs handler → POST tool-result\n11. Control    resolves the runtime's long-poll\n12. Runtime    continues agent loop with the tool result\n13. Loop until stop_reason != tool_use or max iterations\n14. Runtime    emit done event\n15. Control    persist done, mark runs row completed, store memory turn`}
-        />
+        <Mermaid chart={RUN_FLOW_DIAGRAM} caption="one full run, every actor" />
       </section>
     </DocsPage>
   );
