@@ -195,24 +195,28 @@ const en: Dict = {
     title: "Questions",
     items: [
       {
-        q: "Is this another LangChain wrapper?",
-        a: "No. Relay is the runtime under your agent, not a chain abstraction. You write plain functions; Relay handles state, retries, providers, tools, and traces.",
+        q: "Is there a hosted version?",
+        a: "Yes — free during beta, no credit card. Sign up with your email and an OpenAI/Anthropic key, you get a `relay_live_…` back, point the SDK at it. The hosted cloud and self-host run the exact same code; you can switch by changing one env var.",
       },
       {
         q: "Do you take a cut of my tokens?",
-        a: "No. Relay is BYOK by design — you upload your own Anthropic / OpenAI keys and pay providers directly. There's no proxied billing because there's no managed service in the loop.",
+        a: "No. Relay is BYOK by design — you upload your own Anthropic / OpenAI keys (encrypted with AES-256-GCM the moment they arrive) and your tokens flow straight to the providers. We never proxy billing.",
       },
       {
-        q: "Is there a hosted version?",
-        a: "Not yet. Relay is self-host only today: clone, docker compose up, bootstrap. The architecture is built so a managed cloud can be added later without changing the SDK contract.",
+        q: "Is this another LangChain wrapper?",
+        a: "No. Relay is the runtime under your agent, not a chain abstraction. You write plain functions; Relay handles state, retries, providers, tools, memory, and traces.",
+      },
+      {
+        q: "Where does my data live?",
+        a: "On the cloud: a per-tenant slice of Postgres on Supabase, credentials encrypted at rest. On self-host: wherever you run your Postgres. Either way, your tool handlers execute in your process — Relay never sees your business logic.",
       },
       {
         q: "What's the lock-in?",
-        a: "Almost none. Your tools are TypeScript functions. Your prompts are strings. Your memory is a Postgres table you can export. The SDK protocol is plain HTTP + SSE.",
+        a: "Almost none. Your tools are TypeScript functions in your repo. Your prompts are strings. Your memory is a Postgres table you can export. The SDK protocol is plain HTTP + SSE. Moving cloud ↔ self-host is one `baseUrl` change.",
       },
       {
         q: "What's coming next?",
-        a: "Durable execution (resumable agents across crashes), human-in-the-loop checkpoints, multi-agent orchestration, voice agents.",
+        a: "Durable execution (resumable agents across crashes), human-in-the-loop checkpoints, multi-agent orchestration, voice agents. Track the roadmap on GitHub.",
       },
     ],
   },
@@ -348,24 +352,28 @@ const es: Dict = {
     title: "Preguntas",
     items: [
       {
-        q: "¿Es otro wrapper de LangChain?",
-        a: "No. Relay es el runtime debajo del agente, no una abstracción de chains. Vos escribís funciones planas; Relay maneja estado, retries, providers, tools y traces.",
+        q: "¿Hay versión hosteada?",
+        a: "Sí — gratis durante la beta, sin tarjeta. Te registrás con tu email + una key de OpenAI/Anthropic, recibís un `relay_live_…` y apuntás el SDK ahí. El cloud y el self-host corren exactamente el mismo código; cambiás de uno a otro con un solo env var.",
       },
       {
         q: "¿Se quedan con un porcentaje de mis tokens?",
-        a: "No. Relay es BYOK por diseño — subís tus propias keys de Anthropic / OpenAI y le pagás a los providers directo. No hay billing proxeado porque no hay servicio managed en el medio.",
+        a: "No. Relay es BYOK por diseño — subís tus propias keys de Anthropic / OpenAI (encriptadas con AES-256-GCM apenas llegan) y tus tokens van directo a los providers. Nunca proxeamos billing.",
       },
       {
-        q: "¿Hay versión hosteada?",
-        a: "Todavía no. Relay es self-host únicamente hoy: clone, docker compose up, bootstrap. La arquitectura está construida para que un cloud managed se pueda agregar después sin romper el contrato del SDK.",
+        q: "¿Es otro wrapper de LangChain?",
+        a: "No. Relay es el runtime debajo del agente, no una abstracción de chains. Vos escribís funciones planas; Relay maneja estado, retries, providers, tools, memoria y traces.",
+      },
+      {
+        q: "¿Dónde vive mi data?",
+        a: "En el cloud: una porción aislada de Postgres en Supabase por tenant, credenciales encriptadas at rest. En self-host: donde tengas tu Postgres. En cualquier caso, tus tool handlers corren en tu proceso — Relay nunca ve tu lógica de negocio.",
       },
       {
         q: "¿Qué lock-in hay?",
-        a: "Casi ninguno. Tus tools son funciones de TypeScript. Tus prompts son strings. Tu memoria es una tabla de Postgres exportable. El protocolo del SDK es HTTP + SSE plano.",
+        a: "Casi ninguno. Tus tools son funciones de TypeScript en tu repo. Tus prompts son strings. Tu memoria es una tabla de Postgres exportable. El protocolo del SDK es HTTP + SSE plano. Pasar de cloud a self-host (o al revés) es cambiar un `baseUrl`.",
       },
       {
         q: "¿Qué viene?",
-        a: "Durable execution (agentes resumibles ante crashes), checkpoints de human-in-the-loop, multi-agent orchestration, voice agents.",
+        a: "Durable execution (agentes resumibles ante crashes), checkpoints de human-in-the-loop, multi-agent orchestration, voice agents. El roadmap completo está en GitHub.",
       },
     ],
   },
