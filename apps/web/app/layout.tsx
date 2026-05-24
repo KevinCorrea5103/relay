@@ -2,6 +2,8 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://relaygh.dev"),
@@ -53,6 +55,8 @@ export default function RootLayout({
     >
       <body className="font-sans antialiased min-h-screen flex flex-col">
         {children}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

@@ -9,6 +9,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "geist": "^1.7.1",
     "mermaid": "^11.15.0",
     "motion": "^12.40.0",
