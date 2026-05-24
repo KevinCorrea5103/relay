@@ -6,7 +6,8 @@ export const docsNav: DocGroup[] = [
     label: "Getting started",
     links: [
       { slug: "", title: "Overview", description: "What Relay is and how it fits together." },
-      { slug: "quickstart", title: "Quickstart", description: "Clone, bootstrap, run your first agent in two minutes." },
+      { slug: "cloud", title: "Cloud (managed)", description: "Sign up, get an API key, ship in 30 seconds. No install." },
+      { slug: "quickstart", title: "Self-host quickstart", description: "Clone, bootstrap, run your own stack in two minutes." },
       { slug: "architecture", title: "Architecture", description: "The three services, the database, and the seams between them." },
     ],
   },

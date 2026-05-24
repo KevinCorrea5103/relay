@@ -6,15 +6,18 @@ import {
   appendEvent,
   completeRun,
   createRun,
+  createTenant,
   deleteCredential,
   deleteMemory,
   deleteNamespace,
   failRun,
+  findTenantByName,
   getRun,
   listCredentials,
   listEvents,
   listMemories,
   listRuns,
+  mintApiKey,
   resolveCredential,
   upsertCredential,
   type ProviderName,
@@ -22,6 +25,7 @@ import {
 import { requireAuth, type AuthVars } from "./auth.js";
 import { injectMemory, storeTurn, DEFAULT_NAMESPACE } from "./memory.js";
 import { pendingTools } from "./pending-tools.js";
+import { sendWelcomeEmail } from "./resend.js";
 import { routeModel } from "./routing.js";
 
 const RUNTIME_URL = process.env.RUNTIME_URL ?? "http://localhost:4100";
@@ -72,6 +76,106 @@ app.get(
     }
   },
 );
+
+// ─── Public: signup (no auth) ────────────────────────────────────────────
+//
+// Body:
+//   {
+//     email: string,
+//     openaiApiKey?: string,
+//     anthropicApiKey?: string,
+//     openaiBaseUrl?: string
+//   }
+//
+// Response (200):
+//   { apiKey, tenant, providers, email: { sent, reason? } }
+//
+// Errors: 400 (invalid input), 409 (email already registered).
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+app.post("/v1/signup", async (c) => {
+  const body = await c.req.json().catch(() => null);
+  if (!body || typeof body !== "object") {
+    return c.json({ error: "invalid json body" }, 400);
+  }
+  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+  if (!EMAIL_RE.test(email)) {
+    return c.json({ error: "valid email required" }, 400);
+  }
+
+  const openaiApiKey =
+    typeof body.openaiApiKey === "string" && body.openaiApiKey
+      ? body.openaiApiKey.trim()
+      : null;
+  const anthropicApiKey =
+    typeof body.anthropicApiKey === "string" && body.anthropicApiKey
+      ? body.anthropicApiKey.trim()
+      : null;
+  const openaiBaseUrl =
+    typeof body.openaiBaseUrl === "string" && body.openaiBaseUrl
+      ? body.openaiBaseUrl.trim()
+      : undefined;
+
+  if (!openaiApiKey && !anthropicApiKey) {
+    return c.json(
+      { error: "at least one of openaiApiKey or anthropicApiKey is required" },
+      400,
+    );
+  }
+
+  const existing = await findTenantByName(email);
+  if (existing) {
+    return c.json(
+      {
+        error: "email already registered",
+        hint: "API keys are hashed and can't be retrieved — sign up with a different email or contact the maintainer to reset.",
+      },
+      409,
+    );
+  }
+
+  const tenant = await createTenant(email);
+  const minted = await mintApiKey({
+    tenantId: tenant.id,
+    name: "cloud signup",
+  });
+
+  const stored: ProviderName[] = [];
+  if (openaiApiKey) {
+    await upsertCredential({
+      tenantId: tenant.id,
+      provider: "openai",
+      apiKey: openaiApiKey,
+      label: "via signup",
+      baseUrl: openaiBaseUrl,
+    });
+    stored.push("openai");
+  }
+  if (anthropicApiKey) {
+    await upsertCredential({
+      tenantId: tenant.id,
+      provider: "anthropic",
+      apiKey: anthropicApiKey,
+      label: "via signup",
+    });
+    stored.push("anthropic");
+  }
+
+  const emailResult = await sendWelcomeEmail({
+    to: email,
+    apiKey: minted.secret,
+  });
+  if (!emailResult.sent) {
+    console.warn(`[signup] welcome email not sent (${emailResult.reason})`);
+  }
+
+  return c.json({
+    apiKey: minted.secret,
+    tenant: { id: tenant.id, name: tenant.name },
+    providers: stored,
+    email: emailResult,
+  });
+});
 
 app.use("/v1/*", requireAuth);
 

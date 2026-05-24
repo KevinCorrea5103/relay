@@ -1,0 +1,45 @@
+# Fly.io config for the TS / Hono control plane.
+
+app = "relay-api"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+  # Build context must be the repo root (Dockerfile copies workspace files).
+  # Use `fly deploy` from the repo root with `--config packages/control-plane/fly.toml`.
+
+[env]
+  PORT = "4000"
+  # Required, set via `fly secrets set ...`:
+  #   DATABASE_URL=postgres://...        (Supabase connection string)
+  #   RELAY_MASTER_KEY=<32-byte hex>     (generate with `pnpm db:keygen`)
+  #   RELAY_INTERNAL_SECRET=<random>     (shared with the runtime)
+  #   RUNTIME_URL=https://relay-runtime.internal:4100   (Fly private network)
+  # Optional:
+  #   RESEND_API_KEY=<key>               (for the welcome email)
+  #   RESEND_FROM="Relay <hello@your-domain>"
+  #   PUBLIC_RELAY_URL=https://relay-api.fly.dev   (used in welcome email body)
+
+[http_service]
+  internal_port = 4000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 250
+    soft_limit = 200
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/health"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512

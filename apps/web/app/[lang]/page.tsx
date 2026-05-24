@@ -99,7 +99,7 @@ export default async function LandingPage({
               <Reveal delay={0.24}>
                 <div className="mt-8 flex flex-wrap items-center gap-3">
                   <Link
-                    href={`/${lang}/docs/quickstart`}
+                    href={`/${lang}/signup`}
                     className="group relative inline-flex items-center gap-2 rounded-md bg-emerald-500 px-5 py-2.5 text-sm font-medium text-ink-950 hover:bg-emerald-400 transition"
                   >
                     {d.hero.primary}
@@ -113,6 +113,12 @@ export default async function LandingPage({
                   >
                     {d.hero.secondary}
                   </a>
+                  <Link
+                    href={`/${lang}/docs/quickstart`}
+                    className="px-2 py-2.5 text-sm text-ink-400 hover:text-ink-100 transition"
+                  >
+                    Self-host →
+                  </Link>
                 </div>
               </Reveal>
 
@@ -407,28 +413,27 @@ export default async function LandingPage({
             <p className="mt-4 text-ink-400">{d.cta.sub}</p>
           </Reveal>
 
-          <Reveal delay={0.24}>
-            <div className="mt-10 inline-flex items-center gap-2 rounded-md border border-ink-800/70 bg-ink-950/80 px-4 py-3 font-mono text-sm text-ink-200">
-              <span className="text-emerald-400">$</span>
-              <span>git clone https://github.com/KevinCorrea5103/relay</span>
-            </div>
-          </Reveal>
-
           <Reveal delay={0.32}>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
               <Link
-                href={`/${lang}/docs/quickstart`}
+                href={`/${lang}/signup`}
                 className="rounded-md bg-emerald-500 px-5 py-3 text-sm font-medium text-ink-950 hover:bg-emerald-400 transition"
               >
                 {d.cta.primary} →
+              </Link>
+              <Link
+                href={`/${lang}/docs/quickstart`}
+                className="rounded-md border border-ink-700 bg-ink-900/40 px-5 py-3 text-sm font-medium text-ink-200 hover:border-ink-500 hover:text-ink-50 transition"
+              >
+                {d.cta.secondary}
               </Link>
               <a
                 href={GITHUB_URL}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-md border border-ink-700 bg-ink-900/40 px-5 py-3 text-sm font-medium text-ink-200 hover:border-ink-500 hover:text-ink-50 transition"
+                className="px-3 py-3 text-sm text-ink-400 hover:text-ink-100 transition"
               >
-                ★ {d.cta.secondary}
+                ★ {d.nav.star}
               </a>
             </div>
           </Reveal>

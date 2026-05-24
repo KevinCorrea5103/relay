@@ -40,7 +40,7 @@ export default async function LocaleLayout({
           <Link href={`/${lang}`} aria-label="Relay home">
             <Wordmark size={18} />
           </Link>
-          <nav className="flex items-center gap-7 text-sm text-ink-400">
+          <nav className="flex items-center gap-5 text-sm text-ink-400 sm:gap-7">
             <Link
               href={`/${lang}/docs`}
               className="hover:text-ink-100 transition"
@@ -55,14 +55,18 @@ export default async function LocaleLayout({
             >
               {d.nav.github}
             </a>
-            <a
-              href={GITHUB_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-md border border-ink-700 bg-ink-900/60 px-3 py-1.5 text-ink-200 hover:border-emerald-500/40 hover:text-emerald-200 transition"
+            <Link
+              href={`/${lang}/login`}
+              className="hidden sm:inline hover:text-ink-100 transition"
             >
-              ★ {d.nav.star}
-            </a>
+              {d.nav.signin}
+            </Link>
+            <Link
+              href={`/${lang}/signup`}
+              className="rounded-md bg-emerald-500 px-3 py-1.5 text-ink-950 font-medium hover:bg-emerald-400 transition"
+            >
+              {d.nav.signup}
+            </Link>
             <LocaleSwitcher current={lang as Locale} />
           </nav>
         </div>

@@ -1,0 +1,38 @@
+# Fly.io config for the Go runtime.
+# Rename `app` after `fly launch --no-deploy` and Fly assigns one.
+
+app = "relay-runtime"
+primary_region = "iad"          # Ashburn, VA — change to your region
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "4100"
+  # CONTROL_PLANE_URL and RELAY_INTERNAL_SECRET must be set via:
+  #   fly secrets set CONTROL_PLANE_URL=https://relay-api.fly.dev
+  #   fly secrets set RELAY_INTERNAL_SECRET=<same value as control plane>
+
+[http_service]
+  internal_port = 4100
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 200
+    soft_limit = 150
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/health"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 256

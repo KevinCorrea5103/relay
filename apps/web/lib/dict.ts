@@ -17,6 +17,8 @@ export type Dict = {
     github: string;
     star: string;
     dashboard: string;
+    signin: string;
+    signup: string;
   };
   hero: {
     badge: string;
@@ -82,12 +84,19 @@ const en: Dict = {
     description:
       "Memory, retries, tools, traces, and durable execution — without building orchestration infrastructure yourself. Open source under Apache 2.0.",
   },
-  nav: { docs: "Docs", github: "GitHub", star: "Star", dashboard: "Dashboard" },
+  nav: {
+    docs: "Docs",
+    github: "GitHub",
+    star: "Star",
+    dashboard: "Dashboard",
+    signin: "Sign in",
+    signup: "Get API key",
+  },
   hero: {
     badge: "Open source · Apache 2.0",
     title: "The backend cloud for reliable AI agents.",
-    sub: "Memory, retries, tools, traces, and durable execution — without building orchestration infrastructure yourself. Self-host the whole stack in three commands.",
-    primary: "Quickstart",
+    sub: "Memory, retries, tools, traces, and durable execution — without building orchestration infrastructure yourself. Sign up free or self-host in three commands.",
+    primary: "Get a free API key",
     secondary: "View on GitHub",
     codeCaption: "agent.ts",
     install: "npm i @relayhq/sdk",
@@ -209,10 +218,10 @@ const en: Dict = {
   },
   cta: {
     eyebrow: "Get started",
-    title: "Run it on your machine in two minutes.",
-    sub: "Three commands. No signup. No waitlist. No vendor.",
-    primary: "Read the quickstart",
-    secondary: "Star on GitHub",
+    title: "Get an API key. Ship an agent today.",
+    sub: "Free cloud beta — no credit card. Or self-host the whole stack in three commands.",
+    primary: "Get a free API key",
+    secondary: "Read the quickstart",
   },
   footer: {
     tagline: "The backend cloud for reliable AI agents.",
@@ -228,12 +237,19 @@ const es: Dict = {
     description:
       "Memoria, retries, tools, traces y durable execution — sin construir vos la infraestructura de orquestación. Open source bajo Apache 2.0.",
   },
-  nav: { docs: "Docs", github: "GitHub", star: "Star", dashboard: "Dashboard" },
+  nav: {
+    docs: "Docs",
+    github: "GitHub",
+    star: "Star",
+    dashboard: "Dashboard",
+    signin: "Iniciar sesión",
+    signup: "Conseguir API key",
+  },
   hero: {
     badge: "Open source · Apache 2.0",
     title: "El cloud backend para agentes de IA confiables.",
-    sub: "Memoria, retries, tools, traces y durable execution — sin construir vos la infraestructura de orquestación. Self-host de todo el stack en tres comandos.",
-    primary: "Quickstart",
+    sub: "Memoria, retries, tools, traces y durable execution — sin construir vos la infraestructura de orquestación. Registrate gratis o self-host en tres comandos.",
+    primary: "Conseguir API key gratis",
     secondary: "Ver en GitHub",
     codeCaption: "agent.ts",
     install: "npm i @relayhq/sdk",
@@ -355,10 +371,10 @@ const es: Dict = {
   },
   cta: {
     eyebrow: "Empezá",
-    title: "Corré todo en tu máquina en dos minutos.",
-    sub: "Tres comandos. Sin signup. Sin waitlist. Sin vendor.",
-    primary: "Leer el quickstart",
-    secondary: "Dar Star en GitHub",
+    title: "Conseguí una API key. Lanzá un agente hoy.",
+    sub: "Cloud beta gratis — sin tarjeta. O self-host del stack completo en tres comandos.",
+    primary: "Conseguir API key gratis",
+    secondary: "Leer el quickstart",
   },
   footer: {
     tagline: "El cloud backend para agentes de IA confiables.",
