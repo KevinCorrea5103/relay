@@ -127,13 +127,23 @@ export default async function Quickstart({
         <H2 id="next">Where to go next</H2>
         <H3 id="next-sdk">Use the SDK in your own code</H3>
         <P>
-          The SDK is on npm. Point it at your local control plane and pass the
-          API key the bootstrap printed.
+          Two official SDKs (TypeScript and Python). Both are on package
+          registries. Point them at your local control plane and pass the API
+          key the bootstrap printed. For Go / Rust / anything else, see{" "}
+          <a className="text-emerald-300 hover:text-emerald-200" href={`/${lang}/docs/sdks`}>
+            Languages &amp; SDKs
+          </a>
+          .
         </P>
         <Code
           lang="typescript"
           fileName="my-agent.ts"
-          code={`import { createAgent, builtin } from "@relayhq/sdk";\n\nconst agent = createAgent({\n  baseUrl: "http://localhost:4000",     // your local control plane\n  apiKey: process.env.RELAY_API_KEY!,   // the relay_live_… you got\n  model: "claude-sonnet-4-6",\n  tools: [builtin.calculator],\n});\n\nfor await (const event of agent.run("What is 23 * 47?")) {\n  if (event.type === "token") process.stdout.write(event.text);\n}`}
+          code={`// npm install @relayhq/sdk\nimport { createAgent, builtin } from "@relayhq/sdk";\n\nconst agent = createAgent({\n  baseUrl: "http://localhost:4000",     // your local control plane\n  apiKey: process.env.RELAY_API_KEY!,   // the relay_live_… you got\n  model: "claude-sonnet-4-6",\n  tools: [builtin.calculator],\n});\n\nfor await (const event of agent.run("What is 23 * 47?")) {\n  if (event.type === "token") process.stdout.write(event.text);\n}`}
+        />
+        <Code
+          lang="python"
+          fileName="my_agent.py"
+          code={`# pip install relayhq\nimport asyncio, os\nfrom relayhq import create_agent, builtin\n\nagent = create_agent(\n    base_url="http://localhost:4000",\n    api_key=os.environ["RELAY_API_KEY"],\n    model="claude-sonnet-4-6",\n    tools=[builtin.calculator],\n)\n\nasync def main():\n    async for event in agent.run("What is 23 * 47?"):\n        if event["type"] == "token":\n            print(event["text"], end="", flush=True)\n\nasyncio.run(main())`}
         />
 
         <H3 id="next-memory">Add semantic memory</H3>

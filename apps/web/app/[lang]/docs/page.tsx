@@ -20,8 +20,8 @@ export default async function DocsOverview({
       <section>
         <H2 id="install">Install the SDK</H2>
         <P>
-          The SDK is the only thing you import in your code. It speaks plain
-          HTTP + SSE to a Relay control plane you self-host.
+          Two official SDKs (TypeScript and Python). Pick your stack — both
+          speak the same HTTP + SSE protocol to the Relay control plane.
         </P>
         <div className="flex flex-wrap items-center gap-2">
           <a
@@ -34,8 +34,25 @@ export default async function DocsOverview({
             <span className="text-ink-600">·</span>
             <span>View on npm ↗</span>
           </a>
+          <a
+            href="https://pypi.org/project/relayhq/"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-md border border-ink-800/70 bg-ink-900/40 px-3 py-1.5 text-xs text-ink-300 hover:border-emerald-500/40 hover:text-emerald-200 transition"
+          >
+            <span className="font-mono">relayhq</span>
+            <span className="text-ink-600">·</span>
+            <span>View on PyPI ↗</span>
+          </a>
         </div>
-        <Code code={`npm install @relayhq/sdk\n# or\npnpm add @relayhq/sdk`} lang="bash" />
+        <Code
+          code={`# TypeScript / Node\nnpm install @relayhq/sdk\n\n# Python\npip install relayhq`}
+          lang="bash"
+        />
+        <P>
+          Using Go, Rust, or anything else? The protocol is plain HTTP + SSE.
+          See <a className="text-emerald-300 hover:text-emerald-200" href={`/${lang}/docs/sdks`}>Languages &amp; SDKs</a>.
+        </P>
       </section>
 
       <section>

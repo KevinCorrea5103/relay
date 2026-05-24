@@ -22,8 +22,8 @@ export default async function SdkDocs({
     <DocsPage
       slug="sdk"
       lang={lang}
-      title="SDK reference"
-      description="The full public surface of @relayhq/sdk: createAgent, builtin tools, custom tools, memory, and the event stream you iterate."
+      title="SDK reference (TypeScript)"
+      description="The full public surface of @relayhq/sdk: createAgent, builtin tools, custom tools, memory, and the event stream you iterate. For Python, see Languages & SDKs."
     >
       <section>
         <H2 id="install">Install</H2>

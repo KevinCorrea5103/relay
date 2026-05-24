@@ -64,16 +64,21 @@ export default async function CloudDocs({
             You get a <InlineCode>relay_live_…</InlineCode> key on screen (and
             in your inbox if we have email configured).
           </li>
-          <li>Install the SDK and point it at the cloud control plane:</li>
+          <li>Install one of the SDKs and point it at the cloud control plane:</li>
         </ol>
         <Code
           lang="bash"
-          code={`npm install @relayhq/sdk`}
+          code={`# TypeScript / Node\nnpm install @relayhq/sdk\n\n# Python\npip install relayhq`}
         />
         <Code
           lang="typescript"
           fileName="agent.ts"
           code={`import { createAgent } from "@relayhq/sdk";\n\nconst agent = createAgent({\n  apiKey: process.env.RELAY_API_KEY,\n  baseUrl: "${RELAY_URL}",\n  model: "gpt-4o-mini",\n});\n\nfor await (const e of agent.run("Say hi in three languages.")) {\n  if (e.type === "token") process.stdout.write(e.text);\n}`}
+        />
+        <Code
+          lang="python"
+          fileName="agent.py"
+          code={`import asyncio, os\nfrom relayhq import create_agent\n\nagent = create_agent(\n    api_key=os.environ["RELAY_API_KEY"],\n    base_url="${RELAY_URL}",\n    model="gpt-4o-mini",\n)\n\nasync def main():\n    async for e in agent.run("Say hi in three languages."):\n        if e["type"] == "token":\n            print(e["text"], end="", flush=True)\n\nasyncio.run(main())`}
         />
       </section>
 

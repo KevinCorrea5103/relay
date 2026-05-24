@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { codeToHtml } from "shiki";
 import { Code } from "@/components/Code";
+import { LanguageTabs, type LanguageTab } from "@/components/LanguageTabs";
 import { Reveal } from "@/components/Reveal";
 import { dicts, isLocale, type Locale } from "@/lib/dict";
 
@@ -49,6 +51,109 @@ const BUILT_ON = [
   "Go",
   "Docker",
 ];
+
+// ─── Language snippets for the multi-language section ──────────────────────
+// Each one shows the same idea: create an agent, run it, stream tokens.
+
+const SNIPPET_TS = `import { createAgent } from "@relayhq/sdk";
+
+const agent = createAgent({
+  apiKey: process.env.RELAY_API_KEY!,
+  baseUrl: "https://api.relaygh.dev",
+  model: "gpt-4o-mini",
+});
+
+for await (const event of agent.run("Say hi in three languages.")) {
+  if (event.type === "token") process.stdout.write(event.text);
+}`;
+
+const SNIPPET_PYTHON = `import asyncio, os
+from relayhq import create_agent
+
+agent = create_agent(
+    api_key=os.environ["RELAY_API_KEY"],
+    base_url="https://api.relaygh.dev",
+    model="gpt-4o-mini",
+)
+
+async def main():
+    async for event in agent.run("Say hi in three languages."):
+        if event["type"] == "token":
+            print(event["text"], end="", flush=True)
+
+asyncio.run(main())`;
+
+const SNIPPET_NEXTJS = `// app/api/agent/route.ts
+import { createAgent } from "@relayhq/sdk";
+
+export async function POST(req: Request) {
+  const { prompt } = await req.json();
+
+  const agent = createAgent({
+    apiKey: process.env.RELAY_API_KEY!,
+    baseUrl: "https://api.relaygh.dev",
+    model: "gpt-4o-mini",
+  });
+
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      for await (const event of agent.run(prompt)) {
+        controller.enqueue(encoder.encode(JSON.stringify(event) + "\\n"));
+      }
+      controller.close();
+    },
+  });
+
+  return new Response(stream, {
+    headers: { "content-type": "application/x-ndjson" },
+  });
+}`;
+
+const SNIPPET_CURL = `curl -N -X POST https://api.relaygh.dev/v1/runs \\
+  -H "authorization: Bearer $RELAY_API_KEY" \\
+  -H "content-type: application/json" \\
+  -d '{
+    "model": "gpt-4o-mini",
+    "input": "Say hi in three languages."
+  }'
+
+# Server-Sent Events stream back:
+# data: {"type":"token","text":"Hello"}
+# data: {"type":"token","text":" Bonjour"}
+# ...
+# data: {"type":"done","output":"...","usage":{...}}`;
+
+const SNIPPET_GO = `package main
+
+import (
+\t"bufio"
+\t"bytes"
+\t"fmt"
+\t"net/http"
+\t"os"
+\t"strings"
+)
+
+func main() {
+\tbody := strings.NewReader(\`{"model":"gpt-4o-mini","input":"Say hi."}\`)
+\treq, _ := http.NewRequest("POST",
+\t\t"https://api.relaygh.dev/v1/runs", body)
+\treq.Header.Set("authorization", "Bearer "+os.Getenv("RELAY_API_KEY"))
+\treq.Header.Set("content-type", "application/json")
+
+\tresp, err := http.DefaultClient.Do(req)
+\tif err != nil { panic(err) }
+\tdefer resp.Body.Close()
+
+\tscanner := bufio.NewScanner(resp.Body)
+\tfor scanner.Scan() {
+\t\tline := scanner.Text()
+\t\tif strings.HasPrefix(line, "data: ") {
+\t\t\tfmt.Println(bytes.TrimPrefix([]byte(line), []byte("data: ")))
+\t\t}
+\t}
+}`;
 
 export default async function LandingPage({
   params,
@@ -123,17 +228,30 @@ export default async function LandingPage({
               </Reveal>
 
               <Reveal delay={0.32}>
-                <a
-                  href="https://www.npmjs.com/package/@relayhq/sdk"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-6 inline-flex items-center gap-2 rounded-md border border-ink-800/70 bg-ink-950/60 px-3 py-1.5 font-mono text-xs text-ink-400 hover:border-emerald-500/40 hover:text-ink-100 transition"
-                  title="View on npm"
-                >
-                  <span className="text-emerald-400">$</span>
-                  <span>{d.hero.install}</span>
-                  <span className="ml-1 text-ink-600">↗</span>
-                </a>
+                <div className="mt-6 flex flex-wrap items-center gap-2">
+                  <a
+                    href="https://www.npmjs.com/package/@relayhq/sdk"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 rounded-md border border-ink-800/70 bg-ink-950/60 px-3 py-1.5 font-mono text-xs text-ink-400 hover:border-emerald-500/40 hover:text-ink-100 transition"
+                    title="View on npm"
+                  >
+                    <span className="text-emerald-400">$</span>
+                    <span>{d.hero.installNpm}</span>
+                    <span className="ml-1 text-ink-600">↗</span>
+                  </a>
+                  <a
+                    href="https://pypi.org/project/relayhq/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 rounded-md border border-ink-800/70 bg-ink-950/60 px-3 py-1.5 font-mono text-xs text-ink-400 hover:border-emerald-500/40 hover:text-ink-100 transition"
+                    title="View on PyPI"
+                  >
+                    <span className="text-emerald-400">$</span>
+                    <span>{d.hero.installPip}</span>
+                    <span className="ml-1 text-ink-600">↗</span>
+                  </a>
+                </div>
               </Reveal>
             </div>
 
@@ -316,6 +434,9 @@ export default async function LandingPage({
         </div>
       </section>
 
+      {/* ─── Use it from anywhere ────────────────────────────────────────── */}
+      <LanguagesSection lang={lang as Locale} d={d} />
+
       {/* ─── Trace (screenshots) ──────────────────────────────────────────── */}
       <section className="border-t border-ink-800/40 py-28">
         <div className="mx-auto max-w-6xl px-6">
@@ -440,5 +561,99 @@ export default async function LandingPage({
         </div>
       </section>
     </>
+  );
+}
+
+// ─── Async section: pre-renders Shiki HTML for every language tab ──────────
+
+async function highlight(code: string, lang: string): Promise<string> {
+  return codeToHtml(code, { lang, theme: "vesper" });
+}
+
+async function LanguagesSection({
+  lang,
+  d,
+}: {
+  lang: Locale;
+  d: (typeof dicts)[Locale];
+}) {
+  const [ts, py, next, bash, go] = await Promise.all([
+    highlight(SNIPPET_TS, "typescript"),
+    highlight(SNIPPET_PYTHON, "python"),
+    highlight(SNIPPET_NEXTJS, "typescript"),
+    highlight(SNIPPET_CURL, "bash"),
+    highlight(SNIPPET_GO, "go"),
+  ]);
+
+  const tabs: LanguageTab[] = [
+    {
+      label: d.languages.tabs.typescript,
+      html: ts,
+      install: "npm i @relayhq/sdk",
+      badge: {
+        label: "npm",
+        href: "https://www.npmjs.com/package/@relayhq/sdk",
+      },
+    },
+    {
+      label: d.languages.tabs.python,
+      html: py,
+      install: "pip install relayhq",
+      badge: { label: "PyPI", href: "https://pypi.org/project/relayhq/" },
+    },
+    {
+      label: d.languages.tabs.nextjs,
+      html: next,
+      install: "npm i @relayhq/sdk",
+      badge: {
+        label: "npm",
+        href: "https://www.npmjs.com/package/@relayhq/sdk",
+      },
+    },
+    { label: d.languages.tabs.curl, html: bash, install: "no install" },
+    { label: d.languages.tabs.go, html: go, install: "stdlib only" },
+  ];
+
+  return (
+    <section className="border-t border-ink-800/40 py-28">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="max-w-2xl">
+          <Reveal>
+            <p className="text-xs uppercase tracking-[0.18em] text-emerald-400/90">
+              {d.languages.eyebrow}
+            </p>
+          </Reveal>
+          <Reveal delay={0.08}>
+            <h2 className="mt-4 font-sans text-3xl font-semibold tracking-tight text-ink-50 sm:text-4xl">
+              {d.languages.title}
+            </h2>
+          </Reveal>
+          <Reveal delay={0.16}>
+            <p className="mt-3 text-ink-400">{d.languages.sub}</p>
+          </Reveal>
+        </div>
+
+        <Reveal delay={0.24}>
+          <div className="mt-10">
+            <LanguageTabs tabs={tabs} />
+          </div>
+        </Reveal>
+
+        <Reveal delay={0.32}>
+          <p className="mt-5 text-sm text-ink-500">
+            {d.languages.footer.replace(
+              "/docs/api",
+              "",
+            )}{" "}
+            <a
+              href={`/${lang}/docs/api`}
+              className="text-emerald-300 hover:text-emerald-200 underline underline-offset-2"
+            >
+              /docs/api
+            </a>
+          </p>
+        </Reveal>
+      </div>
+    </section>
   );
 }

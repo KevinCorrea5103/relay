@@ -14,6 +14,7 @@ export const docsNav: DocGroup[] = [
   {
     label: "SDK",
     links: [
+      { slug: "sdks", title: "Languages & SDKs", description: "TypeScript, Python, Next.js, cURL, Go — pick your stack." },
       { slug: "sdk", title: "SDK reference", description: "createAgent, builtin tools, events, options." },
       { slug: "tools", title: "Tools", description: "Built-in tools and custom function tools (with the full callback protocol)." },
       { slug: "memory", title: "Memory", description: "Semantic memory: pgvector, namespaces, retrieval pipeline." },

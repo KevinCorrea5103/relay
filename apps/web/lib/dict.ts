@@ -27,9 +27,23 @@ export type Dict = {
     primary: string;
     secondary: string;
     codeCaption: string;
-    install: string;
+    installNpm: string;
+    installPip: string;
   };
   builtOn: { title: string };
+  languages: {
+    eyebrow: string;
+    title: string;
+    sub: string;
+    tabs: {
+      typescript: string;
+      python: string;
+      nextjs: string;
+      curl: string;
+      go: string;
+    };
+    footer: string;
+  };
   why: { eyebrow: string; title: string; body: string };
   compare: {
     eyebrow: string;
@@ -99,9 +113,23 @@ const en: Dict = {
     primary: "Get a free API key",
     secondary: "View on GitHub",
     codeCaption: "agent.ts",
-    install: "npm i @relayhq/sdk",
+    installNpm: "npm i @relayhq/sdk",
+    installPip: "pip install relayhq",
   },
   builtOn: { title: "Built on boring, battle-tested infra" },
+  languages: {
+    eyebrow: "Use it from anywhere",
+    title: "TypeScript today. Python today. Anything else over plain HTTP.",
+    sub: "Two official SDKs and a documented HTTP + SSE protocol — wire it into any stack.",
+    tabs: {
+      typescript: "TypeScript",
+      python: "Python",
+      nextjs: "Next.js",
+      curl: "cURL",
+      go: "Go",
+    },
+    footer: "No SDK for your language? The protocol is plain HTTP + SSE — ~30 lines in any language. See /docs/api.",
+  },
   why: {
     eyebrow: "The problem",
     title: "AI apps fail in production because orchestration is unreliable.",
@@ -256,9 +284,23 @@ const es: Dict = {
     primary: "Conseguir API key gratis",
     secondary: "Ver en GitHub",
     codeCaption: "agent.ts",
-    install: "npm i @relayhq/sdk",
+    installNpm: "npm i @relayhq/sdk",
+    installPip: "pip install relayhq",
   },
   builtOn: { title: "Construido sobre infra aburrida y probada" },
+  languages: {
+    eyebrow: "Usalo desde donde quieras",
+    title: "TypeScript hoy. Python hoy. Cualquier otro stack sobre HTTP plano.",
+    sub: "Dos SDKs oficiales y un protocolo HTTP + SSE documentado — lo metés en cualquier stack.",
+    tabs: {
+      typescript: "TypeScript",
+      python: "Python",
+      nextjs: "Next.js",
+      curl: "cURL",
+      go: "Go",
+    },
+    footer: "¿No hay SDK para tu lenguaje? El protocolo es HTTP + SSE plano — ~30 líneas en cualquier lenguaje. Mirá /docs/api.",
+  },
   why: {
     eyebrow: "El problema",
     title: "Las apps de IA fallan en producción porque la orquestación no es confiable.",
