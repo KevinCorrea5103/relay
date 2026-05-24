@@ -10,7 +10,7 @@ primary_region = "iad"          # Ashburn, VA — change to your region
 [env]
   PORT = "4100"
   # CONTROL_PLANE_URL and RELAY_INTERNAL_SECRET must be set via:
-  #   fly secrets set CONTROL_PLANE_URL=https://relay-api.fly.dev
+  #   fly secrets set CONTROL_PLANE_URL=https://api.relaygh.dev
   #   fly secrets set RELAY_INTERNAL_SECRET=<same value as control plane>
 
 [http_service]

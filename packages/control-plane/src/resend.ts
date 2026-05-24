@@ -32,7 +32,7 @@ import { createAgent } from "@relayhq/sdk";
 
 const agent = createAgent({
   apiKey: process.env.RELAY_API_KEY,
-  baseUrl: "${process.env.PUBLIC_RELAY_URL ?? "https://relay-api.fly.dev"}",
+  baseUrl: "${process.env.PUBLIC_RELAY_URL ?? "https://api.relaygh.dev"}",
   model: "gpt-4o-mini",
 });</pre>
       <p style="color:#64748b; font-size:12px; margin-top:24px;">

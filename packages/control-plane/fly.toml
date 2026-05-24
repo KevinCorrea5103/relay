@@ -18,7 +18,7 @@ primary_region = "iad"
   # Optional:
   #   RESEND_API_KEY=<key>               (for the welcome email)
   #   RESEND_FROM="Relay <hello@your-domain>"
-  #   PUBLIC_RELAY_URL=https://relay-api.fly.dev   (used in welcome email body)
+  #   PUBLIC_RELAY_URL=https://api.relaygh.dev   (used in welcome email body)
 
 [http_service]
   internal_port = 4000

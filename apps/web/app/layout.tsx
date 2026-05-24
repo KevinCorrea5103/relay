@@ -4,7 +4,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://relay-cloud.vercel.app"),
+  metadataBase: new URL("https://relaygh.dev"),
   title: {
     default: "Relay — the backend cloud for reliable AI agents",
     template: "%s · Relay",
