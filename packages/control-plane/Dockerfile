@@ -3,7 +3,7 @@
 # Must be built from the repo root, e.g.:
 #   docker build -f packages/control-plane/Dockerfile -t relay-control-plane .
 
-FROM node:20-alpine AS build
+FROM node:26-alpine AS build
 
 RUN corepack enable
 
@@ -33,7 +33,7 @@ RUN pnpm --filter @relayhq/db build && \
 RUN pnpm --filter @relayhq/control-plane deploy --prod /out
 
 # ─── Runtime stage ─────────────────────────────────────────────────────────
-FROM node:20-alpine AS run
+FROM node:26-alpine AS run
 
 WORKDIR /app
 
