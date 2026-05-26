@@ -57,8 +57,11 @@ const config: Config = {
           to: { backgroundPosition: "-200% center" },
         },
         marquee: {
+          // StackMarquee sets --marquee-shift dynamically based on how many
+          // copies of the content it renders (currently 4 copies → -25%).
+          // Falls back to -50% for any other caller that doesn't set it.
           from: { transform: "translateX(0)" },
-          to: { transform: "translateX(-50%)" },
+          to: { transform: "translateX(var(--marquee-shift, -50%))" },
         },
       },
     },

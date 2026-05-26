@@ -81,9 +81,6 @@ importers:
       shiki:
         specifier: ^4.1.0
         version: 4.1.0
-      simple-icons:
-        specifier: ^16.21.0
-        version: 16.21.0
     devDependencies:
       '@types/node':
         specifier: ^22.0.0
@@ -1706,10 +1703,6 @@ packages:
     resolution: {integrity: sha512-l/ABZPUR5v70jI10EzqfMS/I96vjSGv2y0ihUV+WYFzv0EfvW4s54m0Lg8wCrrL+2IkwBzFTuxkZjPf8b2NX9Q==}
     engines: {node: '>=20'}
 
-  simple-icons@16.21.0:
-    resolution: {integrity: sha512-kH6LEx5yvBGVNaVrHnZ7D17G16CmmHiI8DD7MwIwgnWmDFTiFu4PhFZLNdV6bMGr61qbHMMTXLoo/T6C25dMGA==}
-    engines: {node: '>=0.12.18'}
-
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
     engines: {node: '>=0.10.0'}
@@ -3274,8 +3267,6 @@ snapshots:
       '@shikijs/types': 4.1.0
       '@shikijs/vscode-textmate': 10.0.2
       '@types/hast': 3.0.4
-
-  simple-icons@16.21.0: {}
 
   source-map-js@1.2.1: {}
 
