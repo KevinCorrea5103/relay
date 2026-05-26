@@ -1,11 +1,60 @@
-# Production deploy runbook — security + scale rollout
+# Production deploy runbook
 
-Sequence to apply to the live `relayhq-api` (Fly) + Supabase Postgres setup.
-Every step is independently rollback-able. Stop and check before moving on.
+Two parts:
+- **Part A — One-time setup** (CI/CD, secrets, services). Do once per
+  fresh environment.
+- **Part B — Staged rollout** of the scale stack (NATS, Redis,
+  ClickHouse, backups). Do as you actually hit each scale boundary.
 
-> **You drive the deploys** (Fly tokens, Supabase password, Upstash account
-> credentials). The Claude session prepared all the code and infra config;
-> nothing here changes prod without your hands.
+After Part A, **every push to `main` deploys itself** — GitHub Actions
+runs CI + integration suite, then `flyctl deploy` on the control plane
+(which applies pending migrations via its `release_command`) and the
+runtime. Manual `fly deploy` from a laptop is only the **fallback when
+CI is broken**.
+
+---
+
+# Part A — One-time CI/CD setup
+
+## Step −1 — GitHub secrets + Production environment (10 min)
+
+CI deploys against your real Fly + npm + PyPI accounts. It needs three
+credentials, stored in the **Production environment** so workflows scoped
+to `environment: Production` can read them.
+
+### Generate the credentials
+
+| Secret | Generate with |
+|---|---|
+| `FLY_API_TOKEN` | `fly tokens create org -x 999999h` (paste the entire `FlyV1 ...` string, including the prefix and trailing `=,fm2_...`) |
+| `NPM_TOKEN` | npmjs.com → Access Tokens → Classic → **Automation type** (bypasses 2FA in CI) |
+| `PYPI_TOKEN` | pypi.org → Account → API tokens → scope to the `relayhq` project |
+
+### Wire them in GitHub
+
+1. Repo → **Settings → Environments → New environment** → name it
+   `Production`
+2. Under that environment: **Add secret** → add all three by name
+   (`FLY_API_TOKEN`, `NPM_TOKEN`, `PYPI_TOKEN`)
+3. Optional protection rules to consider:
+   - **Required reviewers** → makes every deploy require a manual
+     approval click. Worth turning on once you have a team.
+   - **Deployment branches** → restrict to `main`.
+
+> Putting these as plain **Repository secrets** does NOT work — the
+> workflows declare `environment: Production` and look for them there.
+
+### Verify
+
+Push any trivial change to `main`. Within ~30s, all three workflows
+appear under Actions:
+- `CI` → typecheck + builds
+- `CI · Integration` → full suite against ephemeral Postgres + Redis +
+  NATS + ClickHouse
+- `Deploy` → `Control plane → Fly` and `Runtime (Go) → Fly`
+
+If `Deploy` shows `FLY_API_TOKEN: ***` (masked, not empty) the secrets
+are wired correctly.
 
 ---
 
@@ -35,6 +84,14 @@ The migration is idempotent and **does not break existing code** — RLS
 policies allow all rows when the `app.tenant_id` GUC is unset and the
 caller is the table owner (which the current control-plane connection
 is). It only **enables** RLS for the future `relay_app` role.
+
+**Automatic path (default)**: the next `Deploy` workflow run applies any
+pending migrations via `release_command` before any new control-plane
+instance takes traffic. A migration failure aborts the deploy cleanly
+(zero-downtime — old instances keep serving).
+
+**Manual fallback** (if you need to apply a migration *before* the next
+deploy, or CI is broken):
 
 ```bash
 # From repo root, with DATABASE_URL pointed at Supabase:
@@ -96,19 +153,17 @@ psql "$APP_URL" -c "set local app.tenant_id = '<some_tenant_uuid>';
 
 ---
 
-## Step 3 — Deploy code with DATABASE_URL_APP (10 min)
+## Step 3 — Wire DATABASE_URL_APP + redeploy (5 min)
 
-Wire the new env var in Fly secrets:
 ```bash
 fly secrets set --app relayhq-api \
   DATABASE_URL_APP="postgres://relay_app:<password>@db.xxxxx.supabase.co:5432/postgres"
+# Setting a secret triggers a rolling restart automatically.
 ```
 
-Build + deploy:
-```bash
-pnpm build
-fly deploy --app relayhq-api
-```
+If you just want to redeploy without changing secrets, push a trivial
+commit (`git commit --allow-empty -m "redeploy"; git push`) or in the
+GitHub UI: Actions → Deploy → Run workflow.
 
 Watch logs:
 ```bash
@@ -311,12 +366,161 @@ pg_restore --no-owner --dbname="$STAGING_DB" relay-prod-YYYYMMDD.dump
 
 ---
 
-## Checklist
+# Part C — Day-2 operations
 
+Things you'll want to know how to do once you're past the rollout.
+
+## Watching a deploy in flight
+
+```bash
+# All in-flight runs:
+gh run list --limit 5
+
+# Watch one until it finishes (auto-refreshes, exits on done):
+gh run watch <run-id>
+
+# Drill into a job:
+gh run view <run-id> --log
+gh run view <run-id> --log-failed     # only failure lines
+```
+
+## Reading prod logs
+
+```bash
+fly logs --app relayhq-api              # live tail
+fly logs --app relayhq-api --no-tail    # last N lines, exit
+
+fly status --app relayhq-api            # machine count, last deploy id
+fly releases --app relayhq-api          # deploy history with image refs
+```
+
+## Smoke test prod after a deploy
+
+```bash
+export RELAY_API_KEY=relay_live_...
+
+# Health
+curl -i https://api.relaygh.dev/health
+
+# Run with streaming
+curl -X POST https://api.relaygh.dev/v1/runs \
+  -H "Authorization: Bearer $RELAY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"gpt-4o-mini","input":"hello"}' \
+  --no-buffer
+
+# Audit log (verify writes from this session show up)
+curl -H "Authorization: Bearer $RELAY_API_KEY" \
+     https://api.relaygh.dev/v1/audit | jq .
+
+# Rate-limit headers should be present
+curl -i -H "Authorization: Bearer $RELAY_API_KEY" \
+     https://api.relaygh.dev/v1/keys | grep -i ratelimit
+```
+
+## Releasing the SDK
+
+```bash
+# TypeScript
+# 1. Bump packages/sdk/package.json version
+# 2. Commit + push
+git tag sdk-ts-v0.2.0 && git push origin sdk-ts-v0.2.0
+# → release-sdk.yml publishes to npm with --provenance
+
+# Python — same pattern with sdks/python/pyproject.toml
+git tag sdk-py-v0.2.0 && git push origin sdk-py-v0.2.0
+```
+
+The workflow refuses to publish if the tag version doesn't match the
+package metadata version. That's intentional — prevents the classic
+"tagged v0.2.0, forgot to bump package.json" footgun.
+
+---
+
+# Part D — Recovery scenarios
+
+## Migration aborted the deploy
+
+The `release_command` exited non-zero → Fly kept the old instances
+running. Your traffic is fine.
+
+```bash
+# 1. Read the failure
+gh run view <run-id> --log-failed
+
+# 2. Fix the migration file locally, push the fix
+# 3. Next deploy retries
+
+# If the migration partially applied (shouldn't happen — each runs in a
+# transaction — but theoretically possible with bad DDL):
+psql "$DATABASE_URL" -c "select * from schema_migrations order by applied_at desc;"
+# Manually clean up or restore from snapshot if needed.
+```
+
+## App deploy succeeded but runtime is broken
+
+Roll back to the previous image:
+
+```bash
+fly releases --app relayhq-api
+# Find the previous good release id (e.g. v123)
+
+fly deploy --app relayhq-api --image registry.fly.io/relayhq-api@<sha-of-prev>
+```
+
+Then revert the bad commit on `main`:
+
+```bash
+git revert <bad-sha>
+git push origin main
+```
+
+## Bad commit pushed to main (CI was green but it's wrong)
+
+```bash
+git revert <bad-sha>
+git push origin main
+# → triggers a fresh Deploy with the revert
+```
+
+Auto-deploy makes this faster than rolling back the Fly image, in most
+cases.
+
+## Lost or compromised credentials
+
+| Lost | Recovery |
+|---|---|
+| `FLY_API_TOKEN` | `fly tokens revoke <id>` then `fly tokens create org` → update GitHub secret |
+| `NPM_TOKEN` | npmjs.com → revoke → regenerate Automation token → update GitHub |
+| `PYPI_TOKEN` | pypi.org → revoke → regenerate scoped to `relayhq` → update GitHub |
+| `RELAY_MASTER_KEY` (think it leaked) | Follow Step 7 (rotation) urgently. Generate new, set as primary, set old as `RELAY_MASTER_KEY_PREVIOUS`, run `pnpm db:rotate-master-key`, then unset previous. |
+| `RELAY_INTERNAL_SECRET` | Generate a new random ~32-byte string; `fly secrets set` on both `relayhq-api` and `relay-runtime` to the same value, redeploy both. |
+| `relay_app` Postgres password | `ALTER ROLE relay_app WITH PASSWORD '<new>';` then `fly secrets set DATABASE_URL_APP="..."` with the new password |
+
+## Status check
+
+```bash
+# All in one place:
+gh run list --limit 10                         # CI/CD state
+fly status --app relayhq-api                   # control plane
+fly status --app relay-runtime                 # runtime
+curl -i https://api.relaygh.dev/health         # public health
+psql "$DATABASE_URL" -c "select count(*) from schema_migrations;"   # DB schema
+```
+
+---
+
+# Checklist
+
+## Part A — one-time CI/CD setup
+- [ ] Step −1: 3 secrets in GitHub Production environment, verified via Actions log showing masked values
 - [ ] Step 0: Snapshot taken
-- [ ] Step 1: Migration 004 applied to Supabase
+- [ ] Step 1: Migration 004 applied to Supabase (auto via release_command or manual)
 - [ ] Step 2: `relay_app` user created and tested with RLS
 - [ ] Step 3: `DATABASE_URL_APP` set in Fly, deploy successful
+- [ ] Smoke test passes against prod
+
+## Part B — staged scale rollout (do as you hit each ceiling)
 - [ ] Step 4: NATS deployed, control plane logs show "tool broker: nats"
 - [ ] Step 5: Redis wired, rate limit tested with 70 rapid requests
 - [ ] Step 6: ClickHouse double-write running for ≥ 7 days, counts match
