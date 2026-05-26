@@ -198,27 +198,6 @@ Path("hello.mp3").write_bytes(audio_bytes)`}
         />
       </section>
 
-      <section>
-        <H2 id="not-yet">Not in this release</H2>
-        <ul className="list-disc space-y-2 pl-5 text-ink-300">
-          <li>
-            <strong>Streaming STT</strong> (low-latency live transcription) —
-            requires WebSocket or chunked upload. Coming when there&apos;s a
-            customer pulling for it.
-          </li>
-          <li>
-            <strong>Realtime bidirectional</strong> (OpenAI Realtime API
-            style) — a different beast (voice activity detection, opus
-            encoding, jitter buffers). Not on the roadmap unless someone
-            pays for it.
-          </li>
-          <li>
-            <strong>Non-OpenAI providers</strong> (Deepgram, ElevenLabs,
-            Cartesia) — easy to add when needed; each will be its own BYOK
-            credential.
-          </li>
-        </ul>
-      </section>
     </DocsPage>
   );
 }
