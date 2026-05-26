@@ -1,142 +1,115 @@
 import type { ReactNode } from "react";
+import {
+  siAnthropic,
+  siDocker,
+  siGo,
+  siHono,
+  siNextdotjs,
+  siOllama,
+  siPostgresql,
+} from "simple-icons";
 
 // ─── StackMarquee ──────────────────────────────────────────────────────────
 //
-// Infinite horizontal carousel of the boring-but-battle-tested stack we run
-// on. SVG-only (no external images, no fonts to load), monochrome, hovers
-// to emerald to match the rest of the site. Pure CSS — the track is the
-// list duplicated twice, animated from translateX(0) to translateX(-50%)
-// so the seam is invisible.
+// Infinite horizontal carousel of the stack we run on. Uses the official
+// brand marks from the `simple-icons` package (CC0, community-maintained,
+// the de-facto standard for tech-stack strips on landing pages).
+//
+// Two icons aren't in simple-icons and stay as small inline SVGs:
+//   - OpenAI (simple-icons removed it over brand restrictions)
+//   - pgvector (it's a Postgres extension, not its own brand)
+//
+// The track is the list duplicated end-to-end; we animate from
+// translateX(0) to translateX(-50%) so the seam is invisible.
 
 type LogoSpec = {
   name: string;
-  Icon: () => ReactNode;
+  path: string; // SVG path data
+  color: string; // brand hex with leading #
+  viewBox?: string; // simple-icons defaults to 24×24; overrides for custom marks
 };
 
-const ICON_CLASS = "h-7 w-auto text-ink-400 transition-colors group-hover:text-emerald-300";
+// Helper to read a simple-icons entry into our LogoSpec shape.
+function fromSI(icon: {
+  title: string;
+  slug?: string;
+  path: string;
+  hex: string;
+}): LogoSpec {
+  return { name: icon.title, path: icon.path, color: `#${icon.hex}` };
+}
 
-const PostgresLogo = () => (
-  <svg viewBox="0 0 64 64" className={ICON_CLASS} fill="none" aria-hidden>
-    <path
-      d="M50 16c-3-3-9-4-14-3 1-1 2-2 4-2 4-1 9 0 12 3 3 4 3 9 1 14-1 4-3 8-5 11-2 2-5 4-8 4-2 0-4-1-5-3-1-2-1-4 0-6 1-3 3-6 6-7 2-1 4-1 6 0M22 14c-2 0-4 1-6 3-3 4-4 9-3 14 0 5 2 10 5 14 2 3 5 5 9 6 3 0 6-1 8-3 1-2 2-4 1-7-1-3-3-6-6-7-2-1-5-1-7 0m12 4c-3 1-5 4-5 7-1 6 1 12 5 16 2 2 4 3 6 3 3 0 5-2 6-5 1-3 1-7-1-10-1-4-4-8-7-10-1-1-3-1-4-1"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
+// Custom marks for the two we can't pull from simple-icons.
+// Kept abstract on purpose so they read as "this thing" without
+// pretending to be the trademarked artwork.
+const PGVECTOR: LogoSpec = {
+  name: "pgvector",
+  viewBox: "0 0 24 24",
+  color: "#4169E1", // share Postgres blue — it's an extension
+  path:
+    "M12 2L12 22 M2 12L22 12 M5 5L19 19 M19 5L5 19 " +
+    "M12 9.5A2.5 2.5 0 1 1 12 14.5A2.5 2.5 0 1 1 12 9.5Z",
+};
 
-const PgvectorLogo = () => (
-  <svg viewBox="0 0 64 64" className={ICON_CLASS} fill="none" aria-hidden>
-    <path d="M10 32h44M32 10v44M16 16l32 32M48 16L16 48" stroke="currentColor" strokeWidth="2" />
-    <circle cx="32" cy="32" r="4" fill="currentColor" />
-  </svg>
-);
-
-const AnthropicLogo = () => (
-  <svg viewBox="0 0 64 64" className={ICON_CLASS} fill="currentColor" aria-hidden>
-    <path d="M22 12h7l13 40h-7l-3-9H19l-3 9H9l13-40zm1.5 25h11L29 21l-5.5 16z" />
-  </svg>
-);
-
-const OpenAILogo = () => (
-  <svg viewBox="0 0 64 64" className={ICON_CLASS} fill="none" aria-hidden>
-    <path
-      d="M32 8c-6 0-12 4-13 11-5 2-9 7-9 13s4 11 9 13c1 7 7 11 13 11s12-4 13-11c5-2 9-7 9-13s-4-11-9-13c-1-7-7-11-13-11zm0 6 14 8v16l-14 8-14-8V22l14-8z"
-      stroke="currentColor"
-      strokeWidth="2"
-    />
-    <path d="M32 22v20M18 30l14 8 14-8" stroke="currentColor" strokeWidth="2" />
-  </svg>
-);
-
-const OllamaLogo = () => (
-  <svg viewBox="0 0 64 64" className={ICON_CLASS} fill="none" aria-hidden>
-    <ellipse cx="32" cy="40" rx="18" ry="14" stroke="currentColor" strokeWidth="2" />
-    <circle cx="24" cy="22" r="6" stroke="currentColor" strokeWidth="2" />
-    <circle cx="40" cy="22" r="6" stroke="currentColor" strokeWidth="2" />
-    <circle cx="26" cy="38" r="2" fill="currentColor" />
-    <circle cx="38" cy="38" r="2" fill="currentColor" />
-  </svg>
-);
-
-const HonoLogo = () => (
-  <svg viewBox="0 0 64 64" className={ICON_CLASS} fill="none" aria-hidden>
-    <path
-      d="M32 8c-2 10-12 14-12 26 0 11 6 22 12 22s12-11 12-22c0-12-10-16-12-26z"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M32 26c-1 5-6 7-6 14 0 5 3 10 6 10s6-5 6-10c0-7-5-9-6-14z"
-      fill="currentColor"
-      fillOpacity="0.25"
-    />
-  </svg>
-);
-
-const NextLogo = () => (
-  <svg viewBox="0 0 64 64" className={ICON_CLASS} fill="none" aria-hidden>
-    <circle cx="32" cy="32" r="24" stroke="currentColor" strokeWidth="2" />
-    <path d="M22 20v24M22 20l20 24M42 20v18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-  </svg>
-);
-
-const GoLogo = () => (
-  <svg viewBox="0 0 96 64" className={ICON_CLASS} fill="none" aria-hidden>
-    <path
-      d="M16 24h12M14 32h16M16 40h12"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-    />
-    <path
-      d="M52 16c-9 0-16 7-16 16s7 16 16 16c5 0 9-2 12-5v-8H50v-3h17v13c-3 4-9 8-15 8-12 0-22-9-22-21s10-21 22-21c6 0 11 2 15 6l-2 2c-3-3-7-5-13-5z"
-      fill="currentColor"
-    />
-  </svg>
-);
-
-const DockerLogo = () => (
-  <svg viewBox="0 0 80 64" className={ICON_CLASS} fill="none" aria-hidden>
-    <rect x="10" y="28" width="8" height="8" stroke="currentColor" strokeWidth="1.5" />
-    <rect x="20" y="28" width="8" height="8" stroke="currentColor" strokeWidth="1.5" />
-    <rect x="30" y="28" width="8" height="8" stroke="currentColor" strokeWidth="1.5" />
-    <rect x="40" y="28" width="8" height="8" stroke="currentColor" strokeWidth="1.5" />
-    <rect x="20" y="18" width="8" height="8" stroke="currentColor" strokeWidth="1.5" />
-    <rect x="30" y="18" width="8" height="8" stroke="currentColor" strokeWidth="1.5" />
-    <rect x="40" y="18" width="8" height="8" stroke="currentColor" strokeWidth="1.5" />
-    <rect x="30" y="8" width="8" height="8" stroke="currentColor" strokeWidth="1.5" />
-    <path
-      d="M6 40c0 6 6 12 18 12h18c14 0 22-10 24-16-3 1-7 1-10 0-2 6-8 6-12 2"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      fill="none"
-    />
-  </svg>
-);
+const OPENAI: LogoSpec = {
+  name: "OpenAI",
+  viewBox: "0 0 24 24",
+  color: "#10A37F", // OpenAI's brand green
+  path:
+    "M12 2c-3 0-5.5 2-6.3 5C3.2 7.8 1.5 10.3 1.5 13.2c0 2.4 1.2 4.5 3 5.7C5.2 21.5 7.4 23 10 23c3 0 5.5-2 6.3-5C18.8 17.2 20.5 14.7 20.5 11.8c0-2.4-1.2-4.5-3-5.7C16.8 4.5 14.6 3 12 3z" +
+    "M9 9l3 1.8v3.6l3-1.8M9 9l3-1.8L15 9M9 9v3.6L12 14.4",
+};
 
 const LOGOS: LogoSpec[] = [
-  { name: "Postgres", Icon: PostgresLogo },
-  { name: "pgvector", Icon: PgvectorLogo },
-  { name: "Anthropic", Icon: AnthropicLogo },
-  { name: "OpenAI", Icon: OpenAILogo },
-  { name: "Ollama", Icon: OllamaLogo },
-  { name: "Hono", Icon: HonoLogo },
-  { name: "Next.js", Icon: NextLogo },
-  { name: "Go", Icon: GoLogo },
-  { name: "Docker", Icon: DockerLogo },
+  fromSI(siPostgresql),
+  PGVECTOR,
+  fromSI(siAnthropic),
+  OPENAI,
+  fromSI(siOllama),
+  fromSI(siHono),
+  fromSI(siNextdotjs),
+  fromSI(siGo),
+  fromSI(siDocker),
 ];
 
+// On a dark site, pure-black brands (Anthropic, Ollama, Next.js) read as
+// invisible at idle. Lighten them slightly while keeping the rest of the
+// brand colors faithful. Hover always reveals true brand color.
+const NEAR_BLACK = new Set(["Anthropic", "Ollama", "Next.js"]);
+
+function colorFor(spec: LogoSpec): string {
+  return NEAR_BLACK.has(spec.name) ? "#cbd5e1" /* ink-300 */ : spec.color;
+}
+
+function Logo({ spec }: { spec: LogoSpec }): ReactNode {
+  return (
+    <span
+      className="group flex items-center"
+      title={spec.name}
+      aria-label={spec.name}
+    >
+      <svg
+        viewBox={spec.viewBox ?? "0 0 24 24"}
+        className="h-7 w-auto opacity-80 transition-all group-hover:opacity-100 group-hover:scale-110"
+        fill={colorFor(spec)}
+        aria-hidden
+        style={{
+          // Hover swaps to true brand color even for the near-black overrides.
+          transitionProperty: "fill, opacity, transform",
+        }}
+      >
+        <path d={spec.path} />
+      </svg>
+    </span>
+  );
+}
+
 export function StackMarquee() {
-  // The track holds the list twice end-to-end; animating -50% lands the
+  // The track holds the list twice end-to-end; animating to -50% lands the
   // second copy exactly where the first started → seamless loop.
   return (
     <div
       className="relative overflow-hidden"
-      // Soft fade on the edges so logos don't pop in/out abruptly.
       style={{
         maskImage:
           "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
@@ -145,15 +118,8 @@ export function StackMarquee() {
       }}
     >
       <div className="flex w-max animate-marquee items-center gap-x-16 py-2 [&:hover]:[animation-play-state:paused]">
-        {[...LOGOS, ...LOGOS].map(({ name, Icon }, i) => (
-          <span
-            key={`${name}-${i}`}
-            className="group flex items-center"
-            aria-label={name}
-            title={name}
-          >
-            <Icon />
-          </span>
+        {[...LOGOS, ...LOGOS].map((spec, i) => (
+          <Logo key={`${spec.name}-${i}`} spec={spec} />
         ))}
       </div>
     </div>
