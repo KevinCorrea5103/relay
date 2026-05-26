@@ -1,0 +1,97 @@
+name: Deploy
+
+# Auto-deploys to Fly when main passes CI.
+#
+# The control-plane job has Fly's release_command wired in fly.toml, so
+# pending DB migrations run before any new instance takes traffic. A bad
+# migration aborts the deploy without serving traffic against a half-
+# migrated schema.
+#
+# The marketing site (apps/web) deploys via Vercel's git integration —
+# no workflow needed here.
+#
+# Required repo secret: FLY_API_TOKEN
+#   Create with: `fly auth token` → GitHub repo → Settings → Secrets
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Which app(s) to deploy"
+        required: true
+        default: "all"
+        type: choice
+        options: [all, control-plane, runtime, nats]
+
+concurrency:
+  # Don't queue parallel deploys to the same app — Fly serializes anyway,
+  # this just keeps the GH actions UI clean.
+  group: deploy-${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  control-plane:
+    name: Control plane → Fly
+    if: |
+      github.event_name == 'push' ||
+      github.event.inputs.target == 'all' ||
+      github.event.inputs.target == 'control-plane'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy (release_command applies pending migrations first)
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          flyctl deploy \
+            --config packages/control-plane/fly.toml \
+            --remote-only \
+            --strategy rolling
+
+  runtime:
+    name: Runtime (Go) → Fly
+    if: |
+      github.event_name == 'push' ||
+      github.event.inputs.target == 'all' ||
+      github.event.inputs.target == 'runtime'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          flyctl deploy \
+            --config runtime/fly.toml \
+            --remote-only \
+            --strategy rolling
+
+  nats:
+    name: NATS → Fly
+    # Only triggered manually — NATS state lives on a persistent volume
+    # and the container almost never changes. No reason to re-deploy on
+    # every code push.
+    if: |
+      github.event_name == 'workflow_dispatch' &&
+      (github.event.inputs.target == 'all' ||
+       github.event.inputs.target == 'nats')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          # The NATS fly.toml is checked into infra/nats once you run
+          # step 4 of docs/DEPLOY_RUNBOOK.md the first time. Until then
+          # this job is a no-op.
+          if [ -f infra/nats/fly.toml ]; then
+            flyctl deploy --config infra/nats/fly.toml --remote-only
+          else
+            echo "infra/nats/fly.toml not present yet — skipping (run runbook step 4 first)"
+          fi

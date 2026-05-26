@@ -35,6 +35,51 @@ jobs:
       - name: Typecheck all packages
         run: pnpm -r run typecheck
 
+  build-web:
+    name: Build marketing site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Build web (catches Next.js compile errors before deploy)
+        run: pnpm --filter @relayhq/web build
+
+  docker-control-plane:
+    name: Build control-plane Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image (validates Dockerfile + bundled migrations)
+        run: |
+          docker build -f packages/control-plane/Dockerfile -t relay-control-plane:ci .
+      - name: Sanity-check the image contains migrations + migrate.js
+        run: |
+          docker run --rm --entrypoint sh relay-control-plane:ci -c '
+            test -d /app/migrations && \
+            test -f /app/node_modules/@relayhq/db/dist/migrate.js && \
+            echo "✓ image looks deployable"
+          '
+
+  python-sdk:
+    name: Python SDK syntax check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sdks/python
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Compile all .py files (catches import + syntax errors)
+        run: python -m compileall relayhq
+
   go:
     name: Build Go runtime
     runs-on: ubuntu-latest

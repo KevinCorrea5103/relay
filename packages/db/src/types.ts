@@ -3,6 +3,8 @@ export type RunStatus = "running" | "completed" | "failed" | "canceled";
 export type Run = {
   id: string;
   tenantId: string | null;
+  parentRunId: string | null;
+  workflowId: string | null;
   status: RunStatus;
   model: string;
   system: string | null;
@@ -15,6 +17,19 @@ export type Run = {
   createdAt: string;
   startedAt: string | null;
   completedAt: string | null;
+};
+
+export type RunTreeNode = RunSummary & {
+  parentRunId: string | null;
+  workflowId: string;
+  depth: number;
+};
+
+export type WorkflowCost = {
+  workflowId: string;
+  runCount: number;
+  inputTokens: number;
+  outputTokens: number;
 };
 
 export type RunEvent = {

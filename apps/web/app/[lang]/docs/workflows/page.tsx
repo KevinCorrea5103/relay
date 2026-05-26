@@ -1,0 +1,302 @@
+import { Code } from "@/components/Code";
+import { Callout, DocsPage, H2, H3, InlineCode, P } from "@/components/DocsPage";
+import { Mermaid } from "@/components/Mermaid";
+
+const SUBAGENT_DIAGRAM = `flowchart TD
+    parent["parent run<br/>writer agent"]
+    sub["sub-run<br/>researcher agent"]
+    sub2["sub-run<br/>critic agent"]
+    parent -- "tool_use(research)" --> sub
+    parent -- "tool_use(critique)" --> sub2
+    sub -. "result" .-> parent
+    sub2 -. "result" .-> parent`;
+
+const GRAPH_DIAGRAM = `flowchart LR
+    start([start]) --> research
+    research --> write
+    write --> review
+    review -->|approved| done([end])
+    review -->|reject| research`;
+
+export default async function WorkflowsDocs({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}) {
+  const { lang } = await params;
+
+  return (
+    <DocsPage
+      slug="workflows"
+      lang={lang}
+      title="Workflows"
+      description="Compose multiple agents. Two primitives: subagent() for LLM-driven composition, Graph for declarative pipelines."
+    >
+      <section>
+        <H2 id="why">Two primitives, on purpose</H2>
+        <P>
+          Relay gives you two ways to build multi-agent systems, and they
+          solve different problems:
+        </P>
+        <ul className="list-disc space-y-2 pl-5 text-ink-300">
+          <li>
+            <strong>
+              <InlineCode>subagent()</InlineCode>
+            </strong>{" "}
+            wraps an agent as a <em>tool</em> that another agent can call.
+            The parent LLM decides when and how to delegate. Best when the
+            flow is open-ended — "research this if you need to."
+          </li>
+          <li>
+            <strong>
+              <InlineCode>Graph</InlineCode>
+            </strong>{" "}
+            wires steps with explicit edges and state passing. The
+            developer decides the flow. Best when the steps are
+            deterministic — "always research, then write, then review."
+          </li>
+        </ul>
+        <P>
+          Both produce the same artifact server-side: a tree of runs linked
+          by <InlineCode>workflow_id</InlineCode>. The dashboard renders the
+          tree and the cost endpoint sums tokens across the whole workflow.
+        </P>
+      </section>
+
+      <section>
+        <H2 id="subagent">subagent() — LLM-driven composition</H2>
+        <Mermaid chart={SUBAGENT_DIAGRAM} caption="a writer agent calls a researcher and a critic as tools" />
+        <P>
+          Wrap any <InlineCode>Agent</InlineCode> with{" "}
+          <InlineCode>subagent({"{name, description, agent}"})</InlineCode>{" "}
+          and pass it into another agent&apos;s tools. The LLM sees it as a
+          normal function tool; the SDK runs the sub-agent linked to the
+          parent run automatically.
+        </P>
+        <Code
+          lang="ts"
+          code={`import { createAgent, subagent, builtin } from "@relayhq/sdk";
+
+const researcher = createAgent({
+  model: "gpt-4o",
+  system: "You research topics and return key facts.",
+  tools: [builtin.calculator],
+});
+
+const writer = createAgent({
+  model: "claude-sonnet-4-6",
+  system: "You write concise posts grounded in the research you commission.",
+  tools: [
+    subagent({
+      name: "research",
+      description: "Research a topic and return key facts.",
+      agent: researcher,
+    }),
+  ],
+});
+
+for await (const ev of writer.run("Write a 200-word post about pgvector")) {
+  if (ev.type === "token") process.stdout.write(ev.text);
+}`}
+        />
+        <Callout kind="tip">
+          The sub-agent&apos;s events are NOT yielded into the parent
+          stream — only its final output is returned as the tool result.
+          To watch progress live, query{" "}
+          <InlineCode>GET /v1/workflows/:id</InlineCode> from the dashboard.
+        </Callout>
+
+        <H3 id="subagent-py">Python</H3>
+        <Code
+          lang="python"
+          code={`from relayhq import create_agent, subagent, builtin
+
+researcher = create_agent(model="gpt-4o", tools=[builtin.calculator])
+
+writer = create_agent(
+    model="claude-sonnet-4-6",
+    tools=[
+        subagent(
+            name="research",
+            description="Research a topic",
+            agent=researcher,
+        ),
+    ],
+)`}
+        />
+
+        <H3 id="subagent-safety">Safety rails</H3>
+        <ul className="list-disc space-y-2 pl-5 text-ink-300">
+          <li>
+            Depth is capped at 5 by default (set{" "}
+            <InlineCode>maxDepth</InlineCode> per subagent). Beyond that
+            the handler returns an error to the parent LLM.
+          </li>
+          <li>
+            Input is validated against the JSON schema before invocation —
+            an LLM that hallucinates args gets a structured error back
+            instead of crashing the handler.
+          </li>
+          <li>
+            Each sub-run gets its own row in <InlineCode>runs</InlineCode>{" "}
+            with <InlineCode>parent_run_id</InlineCode> set, so the cost
+            and trace are attributable.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <H2 id="graph">Graph — declarative pipelines</H2>
+        <Mermaid chart={GRAPH_DIAGRAM} caption="research → write → review, with a feedback loop" />
+        <P>
+          When the flow is deterministic, the{" "}
+          <InlineCode>Graph</InlineCode> API gives you nodes, edges, and
+          state in a couple of chained calls. Every step becomes a Relay
+          run linked under the same workflow.
+        </P>
+        <Code
+          lang="ts"
+          code={`import { createAgent, Graph, END } from "@relayhq/sdk";
+
+const researcher = createAgent({ model: "gpt-4o" });
+const writer     = createAgent({ model: "claude-sonnet-4-6" });
+const reviewer   = createAgent({ model: "claude-haiku-4-5" });
+
+type State = {
+  topic: string;
+  research?: string;
+  draft?: string;
+  verdict?: string;
+};
+
+const graph = new Graph<State>()
+  .agent("research", researcher, { inputFrom: "topic",    outputTo: "research" })
+  .agent("write",    writer,     { inputFrom: "research", outputTo: "draft" })
+  .agent("review",   reviewer,   { inputFrom: "draft",    outputTo: "verdict" })
+  .edge("research", "write")
+  .edge("write", "review")
+  .conditional("review", (state) =>
+    state.verdict?.toLowerCase().includes("approved") ? END : "research",
+  )
+  .start("research");
+
+const { state, path, workflowId } = await graph.run({ topic: "AI agents" });
+
+console.log("path:",    path);        // ["research", "write", "review", ...]
+console.log("draft:",   state.draft);
+console.log("workflow:", workflowId);  // join all runs in the dashboard`}
+        />
+
+        <H3 id="graph-primitives">The primitives</H3>
+        <ul className="list-disc space-y-2 pl-5 text-ink-300">
+          <li>
+            <InlineCode>{".step(name, fn)"}</InlineCode> — a raw step.{" "}
+            <InlineCode>fn(state, ctx)</InlineCode> returns a partial state
+            that gets merged in.
+          </li>
+          <li>
+            <InlineCode>{".agent(name, agent, {inputFrom, outputTo})"}</InlineCode> —
+            wrap a Relay agent as a step. Reads input from a state field,
+            writes the final text to another state field.
+          </li>
+          <li>
+            <InlineCode>{".edge(from, to)"}</InlineCode> — static
+            transition. Pass <InlineCode>END</InlineCode> to terminate.
+          </li>
+          <li>
+            <InlineCode>{".conditional(from, fn)"}</InlineCode> — dynamic
+            transition. <InlineCode>fn(state)</InlineCode> returns the next
+            step name (or <InlineCode>END</InlineCode>).
+          </li>
+          <li>
+            <InlineCode>{".start(name)"}</InlineCode> — entry point.
+            Defaults to the first step you registered.
+          </li>
+          <li>
+            <InlineCode>{".describe()"}</InlineCode> — dump the graph
+            shape. Used by the dashboard to render the flow before any run
+            happens.
+          </li>
+        </ul>
+
+        <H3 id="graph-safety">Safety: cycles and bounds</H3>
+        <P>
+          Cycles are allowed — feedback loops are useful — but every{" "}
+          <InlineCode>run()</InlineCode> caps total step executions at{" "}
+          <InlineCode>maxSteps</InlineCode> (default 30) and throws if
+          exceeded. Override per call when you genuinely need more.
+        </P>
+
+        <H3 id="graph-py">Python</H3>
+        <Code
+          lang="python"
+          code={`from relayhq import create_agent, Graph, END
+
+graph = (
+    Graph()
+      .agent("research", researcher, input_from="topic", output_to="research")
+      .agent("write",    writer,     input_from="research", output_to="draft")
+      .agent("review",   reviewer,   input_from="draft",    output_to="verdict")
+      .edge("research", "write")
+      .edge("write", "review")
+      .conditional("review", lambda s: END if "approved" in s["verdict"].lower() else "research")
+      .start("research")
+)
+
+result = await graph.run({"topic": "AI agents"})
+print(result.path, result.workflow_id)`}
+        />
+      </section>
+
+      <section>
+        <H2 id="when-which">When to use which</H2>
+        <ul className="list-disc space-y-2 pl-5 text-ink-300">
+          <li>
+            <strong>subagent()</strong>: open-ended delegation, parent
+            decides at runtime which sub-agent to call. Example: a support
+            agent that calls a "refund_specialist" only when the user
+            actually asks for a refund.
+          </li>
+          <li>
+            <strong>Graph</strong>: deterministic pipeline with state.
+            Example: ETL-style "ingest → enrich → summarize → publish"
+            where every record goes through the same steps.
+          </li>
+          <li>
+            <strong>Both, in the same workflow</strong>: a Graph step can
+            itself be an agent with <InlineCode>subagent()</InlineCode>{" "}
+            tools. They compose freely.
+          </li>
+        </ul>
+        <Callout kind="note">
+          The Graph runs in your process — Relay&apos;s control plane has
+          no graph engine. That keeps Relay focused on the parts that
+          actually need a server (memory, traces, tool broker, BYOK) and
+          lets your workflows be whatever shape your code wants them to
+          be.
+        </Callout>
+      </section>
+
+      <section>
+        <H2 id="observability">Inspecting a workflow</H2>
+        <P>
+          Every run in a workflow shares one{" "}
+          <InlineCode>workflow_id</InlineCode> and links via{" "}
+          <InlineCode>parent_run_id</InlineCode>. Two endpoints surface this:
+        </P>
+        <Code
+          lang="bash"
+          code={`# Tree of runs (depth-first, indented for rendering)
+curl -H "Authorization: Bearer $RELAY_API_KEY" \\
+     https://api.relaygh.dev/v1/workflows/<workflow_id>
+
+# → { runs: [...], cost: { runCount, inputTokens, outputTokens } }
+
+# Only top-level runs (one row per workflow in your dashboard)
+curl -H "Authorization: Bearer $RELAY_API_KEY" \\
+     "https://api.relaygh.dev/v1/runs?roots=true"`}
+        />
+      </section>
+    </DocsPage>
+  );
+}

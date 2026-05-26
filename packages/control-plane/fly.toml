@@ -1,6 +1,6 @@
 # Fly.io config for the TS / Hono control plane.
 
-app = "relay-api"
+app = "relayhq-api"
 primary_region = "iad"
 
 [build]
@@ -8,8 +8,16 @@ primary_region = "iad"
   # Build context must be the repo root (Dockerfile copies workspace files).
   # Use `fly deploy` from the repo root with `--config packages/control-plane/fly.toml`.
 
+# Run pending DB migrations once per deploy, BEFORE any new instance starts
+# taking traffic. Fly fails the deploy if this exits non-zero, so a broken
+# migration never reaches production. Uses DATABASE_URL (owner role) — RLS
+# bypass needed for schema changes.
+[deploy]
+  release_command = "node node_modules/@relayhq/db/dist/migrate.js"
+
 [env]
   PORT = "4000"
+  MIGRATIONS_DIR = "/app/migrations"
   # Required, set via `fly secrets set ...`:
   #   DATABASE_URL=postgres://...        (Supabase connection string)
   #   RELAY_MASTER_KEY=<32-byte hex>     (generate with `pnpm db:keygen`)

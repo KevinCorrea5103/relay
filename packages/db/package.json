@@ -17,7 +17,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "migrate": "tsx src/migrate.ts",
     "bootstrap": "tsx src/bootstrap.ts",
-    "keygen": "tsx -e \"import('./src/encryption.js').then(m => console.log(m.generateMasterKey()))\""
+    "keygen": "tsx -e \"import('./src/encryption.js').then(m => console.log(m.generateMasterKey()))\"",
+    "rotate-master-key": "tsx src/rotate-master-key.ts"
   },
   "dependencies": {
     "pg": "^8.13.0"

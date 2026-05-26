@@ -3,8 +3,12 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getPool } from "./client.js";
 
+// In dev, migrations live at <repo>/migrations relative to this file.
+// In production containers, the Dockerfile copies them to /app/migrations
+// and sets MIGRATIONS_DIR. Honor the env first.
 const here = fileURLToPath(new URL(".", import.meta.url));
-const MIGRATIONS_DIR = resolve(here, "../../../migrations");
+const MIGRATIONS_DIR =
+  process.env.MIGRATIONS_DIR ?? resolve(here, "../../../migrations");
 
 async function main() {
   const pool = getPool();

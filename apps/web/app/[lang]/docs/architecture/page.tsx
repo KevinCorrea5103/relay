@@ -4,8 +4,11 @@ import { Mermaid } from "@/components/Mermaid";
 
 const STACK_DIAGRAM = `flowchart TD
     Caller["caller<br/>SDK / curl"]
-    CP["control-plane<br/>(TS / Hono · :4000)<br/>auth · BYOK · persistence"]
-    DB[("Postgres + pgvector")]
+    CP["control-plane<br/>(TS / Hono · :4000)<br/>auth · BYOK · RLS · rate-limit"]
+    DB[("Postgres + pgvector<br/>(transactional)")]
+    CH[("ClickHouse<br/>(events, optional)")]
+    Redis[("Redis<br/>(rate limit)")]
+    NATS[("NATS JetStream<br/>(tool broker)")]
     RT["runtime<br/>(Go · :4100)<br/>stateless agent loop"]
     A["Anthropic"]
     O["OpenAI"]
@@ -15,8 +18,11 @@ const STACK_DIAGRAM = `flowchart TD
 
     Caller -- "Bearer relay_live_…" --> CP
     CP <--> DB
+    CP -. "double-write" .-> CH
+    CP <--> Redis
+    CP <--> NATS
     CP -- "POST /runs (with creds)" --> RT
-    RT -. "long-poll callbacks" .-> CP
+    RT -. "long-poll via NATS KV" .-> NATS
     RT --> A
     RT --> O
     RT --> Co
@@ -97,9 +103,25 @@ export default async function ArchitectureDocs({
             post-<InlineCode>done</InlineCode>.
           </li>
           <li>
-            <strong>Custom tools broker:</strong> in-memory map of pending tool
-            results. The runtime long-polls; the SDK posts; the broker matches
-            and unblocks.
+            <strong>Custom tools broker:</strong> shared rendezvous for pending
+            tool results. The runtime long-polls; the SDK posts; the broker
+            matches and unblocks. Backed by an in-memory map for single-instance
+            deploys, or by NATS JetStream KV when{" "}
+            <InlineCode>NATS_URL</InlineCode> is set — that&apos;s what lets the
+            control plane scale horizontally.
+          </li>
+          <li>
+            <strong>Rate limiting:</strong> per-tenant token-bucket
+            middleware on <InlineCode>/v1/*</InlineCode>. Memory backend
+            by default; Redis backend (atomic via Lua) when{" "}
+            <InlineCode>REDIS_URL</InlineCode> is set.
+          </li>
+          <li>
+            <strong>Run linking:</strong> sub-agent and graph workflows
+            share one <InlineCode>workflow_id</InlineCode>;{" "}
+            <InlineCode>GET /v1/workflows/:id</InlineCode> returns the
+            full tree with aggregated cost. See{" "}
+            <a className="text-emerald-300 hover:text-emerald-200" href={`/${lang}/docs/workflows`}>Workflows</a>.
           </li>
         </ul>
       </section>
@@ -145,13 +167,47 @@ export default async function ArchitectureDocs({
       <section>
         <H2 id="postgres">Postgres + pgvector</H2>
         <P>
-          The single source of truth. <InlineCode>pgvector</InlineCode> is the
-          only extension (used for memory). Schema:
+          The transactional source of truth. Row-Level Security is enabled
+          on every tenant-scoped table; the control plane connects as a
+          non-owner role so RLS actually applies. Schema:
         </P>
         <Code
           lang="text"
-          code={`tenants                  who owns what\n  └─ api_keys            relay_live_… (sha-256 hashed)\n  └─ provider_credentials  per-provider LLM keys (AES-256-GCM at rest)\n  └─ runs                each execution, scoped to a tenant\n        └─ run_events    ordered event log per run\n  └─ memories            pgvector(1536), namespaced`}
+          code={`tenants                  who owns what\n  └─ api_keys            relay_live_… (sha-256 hashed)\n  └─ provider_credentials  per-provider LLM keys (AES-256-GCM at rest)\n  └─ runs                each execution, scoped to a tenant\n        └─ run_events    ordered event log per run (mirrored to ClickHouse)\n  └─ memories            pgvector(1536), namespaced\n  └─ audit_events        every security-relevant action`}
         />
+        <P>
+          See <a className="text-emerald-300 hover:text-emerald-200" href={`/${lang}/docs/security`}>Security</a> for the full RLS + key rotation + audit model.
+        </P>
+      </section>
+
+      <section>
+        <H2 id="scale">Scale add-ons (optional)</H2>
+        <P>
+          The base stack (control-plane + runtime + Postgres) is enough
+          for single-instance deploys. To scale horizontally, three
+          optional services attach via env vars:
+        </P>
+        <ul className="list-disc space-y-2 pl-5 text-ink-300">
+          <li>
+            <strong>NATS JetStream</strong> (
+            <InlineCode>NATS_URL</InlineCode>) — shared KV for the custom-
+            tool broker. Required to run more than one control-plane
+            replica.
+          </li>
+          <li>
+            <strong>Redis</strong> (<InlineCode>REDIS_URL</InlineCode>) —
+            atomic token-bucket for rate limiting across the fleet.
+            Optional, but fleet-wide caps only work with it.
+          </li>
+          <li>
+            <strong>ClickHouse</strong> (
+            <InlineCode>CLICKHOUSE_URL</InlineCode>) — append-only columnar
+            store for <InlineCode>run_events</InlineCode>. Postgres is
+            fine until you hit ~10k events/sec; past that, switch to
+            double-write and eventually flip{" "}
+            <InlineCode>READ_EVENTS_FROM=clickhouse</InlineCode>.
+          </li>
+        </ul>
       </section>
 
       <section>

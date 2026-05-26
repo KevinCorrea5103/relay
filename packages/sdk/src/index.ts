@@ -1,5 +1,20 @@
 export { createAgent, builtin } from "./agent.js";
-export { tool } from "./tool.js";
+export { tool, validateAgainstSchema } from "./tool.js";
+export { subagent } from "./subagent.js";
+export { transcribe, synthesize } from "./voice.js";
+export type {
+  TranscribeOptions,
+  TranscribeResult,
+  SynthesizeOptions,
+} from "./voice.js";
+export { Graph, START, END, collectFinalOutput } from "./graph.js";
+export type {
+  StepFn,
+  StepContext,
+  ConditionalFn,
+  GraphRunOptions,
+  GraphRunResult,
+} from "./graph.js";
 export type { Agent } from "./agent.js";
 export type {
   AgentConfig,
@@ -12,6 +27,8 @@ export type {
   Tool,
   BuiltinTool,
   FunctionTool,
+  ToolContext,
+  RunOptions,
   MemoryConfig,
   ModelId,
   AnthropicModel,

@@ -18,10 +18,12 @@ COPY packages/control-plane/package.json packages/control-plane/
 # Install everything (workspace links resolve before sources exist)
 RUN pnpm install --frozen-lockfile
 
-# Now copy sources
+# Now copy sources + migrations (shipped with the image so the release
+# command can apply pending ones before any new instance takes traffic).
 COPY packages/sdk           packages/sdk
 COPY packages/db            packages/db
 COPY packages/control-plane packages/control-plane
+COPY migrations             migrations
 
 # Build the deps the control-plane imports + the control plane itself
 RUN pnpm --filter @relayhq/db build && \
@@ -39,8 +41,11 @@ COPY --from=build /out/package.json ./package.json
 COPY --from=build /out/dist         ./dist
 COPY --from=build /out/node_modules ./node_modules
 
+# Migrations live next to the app; the migrate script honors MIGRATIONS_DIR.
+COPY --from=build /repo/migrations  ./migrations
+
 EXPOSE 4000
-ENV PORT=4000 NODE_ENV=production
+ENV PORT=4000 NODE_ENV=production MIGRATIONS_DIR=/app/migrations
 
 USER node
 CMD ["node", "dist/server.js"]

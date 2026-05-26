@@ -1,5 +1,9 @@
 import crypto from "node:crypto";
-import { getPool } from "./client.js";
+import pg from "pg";
+import { getAdminPool } from "./client.js";
+
+type Queryable = pg.Pool | pg.PoolClient;
+const q = (c?: pg.PoolClient): Queryable => c ?? getAdminPool();
 
 export type ApiKeyDescriptor = {
   id: string;
@@ -44,15 +48,14 @@ const map = (r: Row): ApiKeyDescriptor => ({
   revokedAt: r.revoked_at?.toISOString() ?? null,
 });
 
-export async function mintApiKey(input: {
-  tenantId: string;
-  name: string;
-}): Promise<MintedApiKey> {
-  const pool = getPool();
+export async function mintApiKey(
+  input: { tenantId: string; name: string },
+  client?: pg.PoolClient,
+): Promise<MintedApiKey> {
   const secret = generateSecret();
   const hashed = hashKey(secret);
   const prefix = secret.slice(0, 16) + "…";
-  const res = await pool.query<Row>(
+  const res = await q(client).query<Row>(
     `insert into api_keys (tenant_id, name, prefix, hashed_secret)
      values ($1, $2, $3, $4)
      returning *`,
@@ -61,11 +64,15 @@ export async function mintApiKey(input: {
   return { descriptor: map(res.rows[0]!), secret };
 }
 
+// Authentication uses the admin pool intentionally — when we don't yet
+// know which tenant owns the key, we can't scope RLS by tenant. The query
+// matches only on the hashed_secret (which is unique) so cross-tenant leak
+// is not possible here.
 export async function authenticateApiKey(
   secret: string,
 ): Promise<{ tenantId: string; keyId: string } | null> {
   if (!secret || !secret.startsWith("relay_live_")) return null;
-  const pool = getPool();
+  const pool = getAdminPool();
   const hashed = hashKey(secret);
   const res = await pool.query<{ id: string; tenant_id: string }>(
     `update api_keys
@@ -79,9 +86,11 @@ export async function authenticateApiKey(
     : null;
 }
 
-export async function listApiKeys(tenantId: string): Promise<ApiKeyDescriptor[]> {
-  const pool = getPool();
-  const res = await pool.query<Row>(
+export async function listApiKeys(
+  tenantId: string,
+  client?: pg.PoolClient,
+): Promise<ApiKeyDescriptor[]> {
+  const res = await q(client).query<Row>(
     `select * from api_keys where tenant_id = $1 order by created_at desc`,
     [tenantId],
   );
@@ -91,9 +100,9 @@ export async function listApiKeys(tenantId: string): Promise<ApiKeyDescriptor[]>
 export async function revokeApiKey(
   tenantId: string,
   keyId: string,
+  client?: pg.PoolClient,
 ): Promise<boolean> {
-  const pool = getPool();
-  const res = await pool.query(
+  const res = await q(client).query(
     `update api_keys set revoked_at = now()
       where id = $1 and tenant_id = $2 and revoked_at is null`,
     [keyId, tenantId],

@@ -1,0 +1,140 @@
+name: CI · Integration
+
+# Runs the full integration suite against real Postgres + Redis + NATS +
+# ClickHouse. Single job because the services share state across the
+# scripts (`run-all.mjs` orchestrates).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    name: Integration suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: relay
+          POSTGRES_PASSWORD: relay
+          POSTGRES_DB: relay
+        ports: ["5434:5432"]
+        options: >-
+          --health-cmd "pg_isready -U relay -d relay"
+          --health-interval 2s
+          --health-timeout 2s
+          --health-retries 30
+
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 2s
+          --health-timeout 2s
+          --health-retries 30
+
+      nats:
+        image: nats:2.10-alpine
+        ports: ["4222:4222", "8222:8222"]
+        # `services` doesn't let us pass CLI args, but the nats image
+        # accepts NATS_* env. Enable JetStream via env-equivalent flag
+        # is not possible — so we fall back to running NATS ourselves
+        # below if this service starts without -js. We use a sentinel
+        # check and re-launch with the right flags if needed.
+        options: >-
+          --health-cmd "wget -q -O- http://localhost:8222/healthz | grep -q ok || exit 1"
+          --health-interval 2s
+          --health-timeout 2s
+          --health-retries 30
+
+      clickhouse:
+        image: clickhouse/clickhouse-server:24.8-alpine
+        env:
+          CLICKHOUSE_USER: relay
+          CLICKHOUSE_PASSWORD: relay
+          CLICKHOUSE_DB: relay
+          CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+        ports: ["8123:8123", "9000:9000"]
+        options: >-
+          --health-cmd "wget -q -O- http://localhost:8123/ping | grep -q Ok"
+          --health-interval 2s
+          --health-timeout 2s
+          --health-retries 30
+
+    env:
+      DATABASE_URL: postgres://relay:relay@localhost:5434/relay
+      DATABASE_URL_APP: postgres://relay_app:relay_app@localhost:5434/relay
+      NATS_URL: nats://localhost:4222
+      REDIS_URL: redis://localhost:6379
+      CLICKHOUSE_URL: http://relay:relay@localhost:8123/relay
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: |
+          pnpm --filter @relayhq/db build
+          pnpm --filter @relayhq/sdk build
+          pnpm --filter @relayhq/control-plane build
+
+      # The default nats service image doesn't enable JetStream. Stop the
+      # services container if it's running and start NATS ourselves with
+      # -js so the KV store works.
+      - name: Ensure NATS has JetStream enabled
+        run: |
+          # Kill any nats container the GH service runner spun up
+          docker ps -q --filter ancestor=nats:2.10-alpine | xargs -r docker stop
+          # Launch our own
+          docker run -d --name nats-js -p 4222:4222 -p 8222:8222 \
+            nats:2.10-alpine -js -m 8222
+          # Wait for healthcheck
+          until curl -sf http://localhost:8222/healthz | grep -q ok; do
+            sleep 1
+          done
+          echo "✓ NATS JetStream up"
+
+      - name: Run Postgres migrations
+        run: pnpm db:migrate
+
+      - name: Set relay_app role password
+        run: |
+          PGPASSWORD=relay psql -h localhost -p 5434 -U relay -d relay \
+            -c "ALTER ROLE relay_app WITH PASSWORD 'relay_app';"
+
+      - name: Apply ClickHouse schema
+        run: |
+          curl -sS -u relay:relay \
+            "http://localhost:8123/?database=relay" \
+            --data-binary @migrations/clickhouse/001_events.sql
+          echo "✓ ClickHouse schema applied"
+
+      - name: Run integration suite
+        run: node tests/integration/run-all.mjs
+
+      - name: Dump service logs on failure
+        if: failure()
+        run: |
+          echo "=== NATS ===" && docker logs nats-js || true
+          echo "=== Postgres ===" && docker logs $(docker ps -aq --filter ancestor=pgvector/pgvector:pg16) || true
+          echo "=== Redis ===" && docker logs $(docker ps -aq --filter ancestor=redis:7-alpine) || true
+          echo "=== ClickHouse ===" && docker logs $(docker ps -aq --filter ancestor=clickhouse/clickhouse-server:24.8-alpine) || true

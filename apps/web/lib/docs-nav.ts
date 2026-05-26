@@ -17,7 +17,9 @@ export const docsNav: DocGroup[] = [
       { slug: "sdks", title: "Languages & SDKs", description: "TypeScript, Python, Next.js, cURL, Go — pick your stack." },
       { slug: "sdk", title: "SDK reference", description: "createAgent, builtin tools, events, options." },
       { slug: "tools", title: "Tools", description: "Built-in tools and custom function tools (with the full callback protocol)." },
+      { slug: "workflows", title: "Workflows", description: "Compose multiple agents: subagent() and the Graph API." },
       { slug: "memory", title: "Memory", description: "Semantic memory: pgvector, namespaces, retrieval pipeline." },
+      { slug: "voice", title: "Voice", description: "Transcription (Whisper) and TTS — BYOK against OpenAI." },
       { slug: "providers", title: "Providers", description: "Anthropic, OpenAI, and any OpenAI-compatible endpoint." },
     ],
   },
@@ -25,6 +27,7 @@ export const docsNav: DocGroup[] = [
     label: "Operating",
     links: [
       { slug: "api", title: "HTTP API", description: "Every control-plane endpoint, with curl examples." },
+      { slug: "security", title: "Security", description: "RLS, key rotation, audit log, rate limits — defense in depth." },
       { slug: "self-host", title: "Self-host", description: "Production deployment, env vars, security, scaling." },
     ],
   },

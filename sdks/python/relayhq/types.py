@@ -96,3 +96,16 @@ class RunRequest(TypedDict, total=False):
     input: str
     tools: List[WireTool]
     memory: Union[bool, MemoryConfig]
+    parentRunId: Optional[str]
+    workflowId: Optional[str]
+
+
+# ─── Tool context (per-invocation) ─────────────────────────────────────────
+#
+# Passed to handlers that opt in by accepting a second positional argument.
+# Carries the runId of the run that decided to call the tool — used by
+# `subagent()` to thread workflow context to the child run.
+
+class ToolContext(TypedDict, total=False):
+    run_id: str
+    workflow_id: Optional[str]

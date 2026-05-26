@@ -1,0 +1,75 @@
+# Dependabot — automatic dependency updates.
+#
+# Why: security patches without manual chasing, version drift kept small.
+# How: opens PRs grouped by ecosystem so 10 minor bumps land as 1 PR, not 10.
+#
+# Updates are weekly (Monday). Security alerts override the schedule and
+# open immediately regardless. Major bumps are NOT auto-opened — they
+# usually have breaking changes worth a manual look.
+
+version: 2
+updates:
+  # ─── npm / pnpm workspace ─────────────────────────────────────────────
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      # One PR for all prod deps, one for all devDeps.
+      prod:
+        dependency-type: production
+        update-types: [minor, patch]
+      dev:
+        dependency-type: development
+        update-types: [minor, patch]
+    ignore:
+      # Pin Next / React majors — bumping these requires migration work.
+      - dependency-name: next
+        update-types: [version-update:semver-major]
+      - dependency-name: react
+        update-types: [version-update:semver-major]
+      - dependency-name: react-dom
+        update-types: [version-update:semver-major]
+
+  # ─── Python SDK ───────────────────────────────────────────────────────
+  - package-ecosystem: pip
+    directory: /sdks/python
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+
+  # ─── Go runtime ───────────────────────────────────────────────────────
+  # Today the runtime is stdlib-only; Dependabot will still notice if a
+  # future dep gets added.
+  - package-ecosystem: gomod
+    directory: /runtime
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+
+  # ─── GitHub Actions themselves ────────────────────────────────────────
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    groups:
+      actions:
+        patterns: ["*"]
+
+  # ─── Docker base images ───────────────────────────────────────────────
+  - package-ecosystem: docker
+    directory: /packages/control-plane
+    schedule:
+      interval: weekly
+      day: monday
+  - package-ecosystem: docker
+    directory: /runtime
+    schedule:
+      interval: weekly
+      day: monday

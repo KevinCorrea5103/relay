@@ -125,6 +125,57 @@ read_url = tool(
 )
 
 
+async def _web_search_handler(input: dict) -> dict:
+    query = input["query"]
+    max_results = int(input.get("max_results") or 5)
+    max_results = max(1, min(max_results, 10))
+    try:
+        from ddgs import DDGS
+    except ImportError:
+        try:
+            from duckduckgo_search import DDGS  # type: ignore
+        except ImportError:
+            return {"error": "web search package not installed. pip install ddgs"}
+    try:
+        import asyncio
+
+        def _search():
+            with DDGS() as ddgs:
+                return list(ddgs.text(query, max_results=max_results))
+
+        raw = await asyncio.to_thread(_search)
+        results = [
+            {
+                "title": r.get("title"),
+                "url": r.get("href") or r.get("url"),
+                "snippet": r.get("body") or r.get("snippet"),
+            }
+            for r in raw
+        ]
+        return {"query": query, "count": len(results), "results": results}
+    except Exception as err:
+        return {"error": f"search failed: {err}"}
+
+
+web_search = tool(
+    name="web_search",
+    description="Search the web (DuckDuckGo) and return top results with title, url, and snippet. Use this to discover URLs before reading them with read_url.",
+    input_schema={
+        "type": "object",
+        "properties": {
+            "query": {"type": "string", "description": "search query"},
+            "max_results": {
+                "type": "integer",
+                "description": "how many results to return (1-10, default 5)",
+            },
+        },
+        "required": ["query"],
+        "additionalProperties": False,
+    },
+    handler=_web_search_handler,
+)
+
+
 def _lookup_user_handler(input: dict) -> dict:
     user_id = input["id"]
     user = USERS.get(user_id)

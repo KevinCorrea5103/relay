@@ -1,10 +1,13 @@
 import { postToolResult, startRun } from "./client.js";
+import { validateAgainstSchema } from "./tool.js";
 import type {
   AgentConfig,
   AgentEvent,
   BuiltinTool,
   BuiltinToolName,
   FunctionTool,
+  RunOptions,
+  ToolContext,
   WireTool,
 } from "./types.js";
 
@@ -13,10 +16,7 @@ declare const process: { env?: Record<string, string | undefined> } | undefined;
 const DEFAULT_BASE_URL = "http://localhost:4000";
 
 export type Agent = {
-  run(
-    input: string,
-    options?: { signal?: AbortSignal },
-  ): AsyncIterable<AgentEvent>;
+  run(input: string, options?: RunOptions): AsyncIterable<AgentEvent>;
 };
 
 export function createAgent(config: AgentConfig): Agent {
@@ -29,6 +29,7 @@ export function createAgent(config: AgentConfig): Agent {
     (typeof process !== "undefined" ? process.env?.RELAY_API_KEY : undefined);
 
   const handlers = new Map<string, FunctionTool["handler"]>();
+  const schemas = new Map<string, Record<string, unknown>>();
   const wireTools: WireTool[] = [];
   for (const tool of config.tools ?? []) {
     if (tool.kind === "builtin") {
@@ -41,6 +42,7 @@ export function createAgent(config: AgentConfig): Agent {
         inputSchema: tool.inputSchema,
       });
       handlers.set(tool.name, tool.handler);
+      schemas.set(tool.name, tool.inputSchema);
     }
   }
 
@@ -61,8 +63,11 @@ export function createAgent(config: AgentConfig): Agent {
           input,
           tools: wireTools,
           memory: config.memory,
+          parentRunId: options?.parentRunId,
+          workflowId: options?.workflowId,
         },
         handlers,
+        schemas,
         options?.signal,
       );
     },
@@ -74,15 +79,38 @@ async function* runWithLocalTools(
   apiKey: string,
   body: Parameters<typeof startRun>[2],
   handlers: Map<string, FunctionTool["handler"]>,
+  schemas: Map<string, Record<string, unknown>>,
   signal?: AbortSignal,
 ): AsyncGenerator<AgentEvent, void, void> {
-  const { runId, events } = await startRun(baseUrl, apiKey, body, signal);
+  const { runId, workflowId, events } = await startRun(
+    baseUrl,
+    apiKey,
+    body,
+    signal,
+  );
   const inFlight: Promise<void>[] = [];
+  const ctx: ToolContext = {
+    runId,
+    workflowId: workflowId ?? body.workflowId ?? runId,
+    signal,
+  };
 
   for await (const event of events) {
     if (event.type === "tool_call" && handlers.has(event.name)) {
       const handler = handlers.get(event.name)!;
-      inFlight.push(executeAndReport(baseUrl, apiKey, runId, event.id, event.input, handler));
+      const schema = schemas.get(event.name);
+      inFlight.push(
+        executeAndReport(
+          baseUrl,
+          apiKey,
+          runId,
+          event.id,
+          event.input,
+          handler,
+          schema,
+          ctx,
+        ),
+      );
     }
     yield event;
   }
@@ -97,10 +125,27 @@ async function executeAndReport(
   toolUseId: string,
   input: unknown,
   handler: FunctionTool["handler"],
+  schema: Record<string, unknown> | undefined,
+  ctx: ToolContext,
 ): Promise<void> {
   let output: unknown;
+  if (schema) {
+    const err = validateAgainstSchema(input, schema);
+    if (err) {
+      output = { error: `invalid tool input: ${err}` };
+      try {
+        await postToolResult(baseUrl, apiKey, runId, toolUseId, output);
+      } catch (err) {
+        console.error(
+          `[relay sdk] failed to post tool result (run=${runId} tool=${toolUseId}):`,
+          err,
+        );
+      }
+      return;
+    }
+  }
   try {
-    output = await handler(input);
+    output = await handler(input, ctx);
   } catch (err) {
     output = `error: ${err instanceof Error ? err.message : String(err)}`;
   }

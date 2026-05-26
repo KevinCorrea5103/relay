@@ -13,6 +13,7 @@ from tools import (
     lookup_order,
     lookup_user,
     read_url,
+    web_search,
 )
 
 
@@ -27,14 +28,15 @@ class Preset:
 PRESETS: dict[str, Preset] = {
     "General assistant": Preset(
         name="General assistant",
-        description="Math, time, web reading. Useful as a quick utility.",
+        description="Math, time, web search and reading. A quick utility.",
         system=(
             "You are a precise, concise assistant. "
-            "Use the calculator for any arithmetic. "
+            "Use the calculator for arithmetic. "
             "Use get_time when the user asks about time or dates. "
-            "Use read_url to fetch any URL the user shares."
+            "Use web_search to find URLs about a topic, then read_url to fetch "
+            "the most relevant result. Never invent URLs — always search first."
         ),
-        tools=[builtin.calculator, get_time, read_url],
+        tools=[builtin.calculator, get_time, web_search, read_url],
     ),
     "Customer support": Preset(
         name="Customer support",
@@ -49,14 +51,17 @@ PRESETS: dict[str, Preset] = {
     ),
     "Research helper": Preset(
         name="Research helper",
-        description="Reads URLs, summarizes, and crunches numbers.",
+        description="Searches the web, reads pages, and crunches numbers.",
         system=(
             "You are a research assistant. "
-            "When the user gives you a URL, fetch it with read_url and summarize. "
+            "Workflow: (1) call web_search with a focused query to find sources, "
+            "(2) pick the most authoritative-looking URL and call read_url to fetch it, "
+            "(3) read more URLs if you need to cross-check. "
             "Use the calculator for any numbers. "
-            "Be concise and cite the URL when relevant."
+            "Never invent URLs — always search first. "
+            "Cite the URLs you used in your final answer."
         ),
-        tools=[read_url, builtin.calculator],
+        tools=[web_search, read_url, builtin.calculator],
     ),
 }
 

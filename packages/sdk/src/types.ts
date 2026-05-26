@@ -22,12 +22,21 @@ export type BuiltinTool = {
   name: BuiltinToolName;
 };
 
+// Context passed to a tool handler. The runId is the run that decided to
+// call the tool — for a subagent, this becomes the parent of the
+// sub-run. Handlers can ignore it entirely if they don't need it.
+export type ToolContext = {
+  runId: string;
+  workflowId: string | null;
+  signal?: AbortSignal;
+};
+
 export type FunctionTool = {
   kind: "function";
   name: string;
   description: string;
   inputSchema: Record<string, unknown>;
-  handler: (input: unknown) => unknown | Promise<unknown>;
+  handler: (input: unknown, ctx?: ToolContext) => unknown | Promise<unknown>;
 };
 
 export type Tool = BuiltinTool | FunctionTool;
@@ -41,6 +50,15 @@ export type AgentConfig = {
   memory?: MemoryConfig;
   baseUrl?: string;
   apiKey?: string;
+};
+
+export type RunOptions = {
+  signal?: AbortSignal;
+  // When this run is a child of another, the server links them so the
+  // dashboard can render the workflow tree and `getWorkflowCost` adds
+  // both. Usually set automatically by the `subagent()` primitive.
+  parentRunId?: string;
+  workflowId?: string;
 };
 
 export type TokenEvent = { type: "token"; text: string };
@@ -86,4 +104,6 @@ export type RunRequest = {
   input: string;
   tools: WireTool[];
   memory?: WireMemory;
+  parentRunId?: string;
+  workflowId?: string;
 };

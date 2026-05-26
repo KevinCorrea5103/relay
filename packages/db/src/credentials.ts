@@ -1,5 +1,9 @@
-import { getPool } from "./client.js";
+import pg from "pg";
+import { getAdminPool } from "./client.js";
 import { open, seal } from "./encryption.js";
+
+type Queryable = pg.Pool | pg.PoolClient;
+const q = (c?: pg.PoolClient): Queryable => c ?? getAdminPool();
 
 export type ProviderName = "anthropic" | "openai";
 
@@ -37,16 +41,18 @@ const mapDescriptor = (r: Row): CredentialDescriptor => ({
   updatedAt: r.updated_at.toISOString(),
 });
 
-export async function upsertCredential(input: {
-  tenantId: string;
-  provider: ProviderName;
-  apiKey: string;
-  label?: string;
-  baseUrl?: string;
-}): Promise<CredentialDescriptor> {
-  const pool = getPool();
+export async function upsertCredential(
+  input: {
+    tenantId: string;
+    provider: ProviderName;
+    apiKey: string;
+    label?: string;
+    baseUrl?: string;
+  },
+  client?: pg.PoolClient,
+): Promise<CredentialDescriptor> {
   const sealed = seal(input.apiKey);
-  const res = await pool.query<Row>(
+  const res = await q(client).query<Row>(
     `insert into provider_credentials
         (tenant_id, provider, label, ciphertext, iv, auth_tag, base_url, updated_at)
      values ($1, $2, $3, $4, $5, $6, $7, now())
@@ -73,9 +79,9 @@ export async function upsertCredential(input: {
 
 export async function listCredentials(
   tenantId: string,
+  client?: pg.PoolClient,
 ): Promise<CredentialDescriptor[]> {
-  const pool = getPool();
-  const res = await pool.query<Row>(
+  const res = await q(client).query<Row>(
     `select * from provider_credentials where tenant_id = $1 order by provider`,
     [tenantId],
   );
@@ -85,9 +91,9 @@ export async function listCredentials(
 export async function resolveCredential(
   tenantId: string,
   provider: ProviderName,
+  client?: pg.PoolClient,
 ): Promise<ResolvedCredential | null> {
-  const pool = getPool();
-  const res = await pool.query<Row>(
+  const res = await q(client).query<Row>(
     `select * from provider_credentials where tenant_id = $1 and provider = $2`,
     [tenantId, provider],
   );
@@ -104,9 +110,9 @@ export async function resolveCredential(
 export async function deleteCredential(
   tenantId: string,
   provider: ProviderName,
+  client?: pg.PoolClient,
 ): Promise<boolean> {
-  const pool = getPool();
-  const res = await pool.query(
+  const res = await q(client).query(
     `delete from provider_credentials where tenant_id = $1 and provider = $2`,
     [tenantId, provider],
   );

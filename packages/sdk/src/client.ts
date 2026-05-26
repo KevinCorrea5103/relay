@@ -2,6 +2,7 @@ import type { AgentEvent, RunRequest } from "./types.js";
 
 export type StartedRun = {
   runId: string;
+  workflowId: string | null;
   events: AsyncIterable<AgentEvent>;
 };
 
@@ -31,8 +32,9 @@ export async function startRun(
   if (!runId) {
     throw new Error("relay: response missing x-run-id");
   }
+  const workflowId = res.headers.get("x-workflow-id");
 
-  return { runId, events: parseEvents(res.body) };
+  return { runId, workflowId, events: parseEvents(res.body) };
 }
 
 async function* parseEvents(

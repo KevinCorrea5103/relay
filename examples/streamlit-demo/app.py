@@ -56,7 +56,11 @@ with st.sidebar:
     st.caption(preset.description)
 
     with st.expander("System prompt", expanded=False):
-        st.code(preset.system, language="text")
+        st.markdown(
+            f"<div style='font-size:0.85rem;line-height:1.5;color:#cbd5e1;"
+            f"white-space:pre-wrap;word-wrap:break-word;'>{preset.system}</div>",
+            unsafe_allow_html=True,
+        )
 
     with st.expander("Tools wired", expanded=False):
         for t in preset.tools:

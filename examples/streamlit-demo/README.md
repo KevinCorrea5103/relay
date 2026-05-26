@@ -9,10 +9,10 @@ API key, see streaming + tool calls in your browser in under a minute.
 ## What you get
 
 - **3 agent presets** (system prompt + tool set)
-  - **General assistant** — calculator, time, web reading
+  - **General assistant** — calculator, time, web search + reading
   - **Customer support** — looks up users, orders, can issue refunds
-  - **Research helper** — fetches URLs, summarizes, crunches numbers
-- **6 tools**, all running locally in your Python process (Relay just
+  - **Research helper** — searches the web, reads pages, crunches numbers
+- **7 tools**, all running locally in your Python process (Relay just
   orchestrates) — no third-party API keys needed
 - **Live trace** — tool calls and results render inline in the chat as they
   happen
@@ -30,7 +30,7 @@ cd relay/examples/streamlit-demo
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 
-pip install -e .
+pip install -r requirements.txt
 
 cp .env.example .env
 # edit .env and paste your RELAY_API_KEY
@@ -99,7 +99,7 @@ See the full doc at [relaygh.dev/en/docs](https://relaygh.dev/en/docs).
 
 ```
 streamlit-demo/
-├── pyproject.toml      # deps: relayhq, streamlit, httpx
+├── requirements.txt   # deps: relayhq, streamlit, httpx
 ├── .env.example
 ├── app.py              # Streamlit chat UI
 ├── agents.py           # 3 preset configs

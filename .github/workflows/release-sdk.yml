@@ -1,0 +1,108 @@
+name: Release SDK
+
+# Publishes SDKs on git tag. Two independent flows:
+#
+#   sdk-ts-vX.Y.Z   → npm publish @relayhq/sdk
+#   sdk-py-vX.Y.Z   → PyPI publish relayhq
+#
+# Cut a release by tagging from main:
+#
+#   # bump version in packages/sdk/package.json first, commit, then:
+#   git tag sdk-ts-v0.2.0 && git push origin sdk-ts-v0.2.0
+#
+#   # bump version in sdks/python/pyproject.toml first, commit, then:
+#   git tag sdk-py-v0.2.0 && git push origin sdk-py-v0.2.0
+#
+# Required repo secrets:
+#   NPM_TOKEN  — npm "Automation" token (bypasses 2FA, scoped to publish)
+#                Create at: npmjs.com → Access Tokens → Generate → Automation
+#   PYPI_TOKEN — PyPI API token scoped to the `relayhq` project
+#                Create at: pypi.org → Account settings → API tokens
+
+on:
+  push:
+    tags:
+      - "sdk-ts-v*"
+      - "sdk-py-v*"
+
+jobs:
+  npm:
+    name: Publish @relayhq/sdk to npm
+    if: startsWith(github.ref, 'refs/tags/sdk-ts-v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: "https://registry.npmjs.org"
+          cache: pnpm
+
+      - name: Verify tag matches package.json version
+        run: |
+          TAG="${GITHUB_REF_NAME#sdk-ts-v}"
+          PKG_VERSION=$(node -p "require('./packages/sdk/package.json').version")
+          if [ "$TAG" != "$PKG_VERSION" ]; then
+            echo "::error::Tag version ($TAG) does not match package.json version ($PKG_VERSION)"
+            echo "Bump packages/sdk/package.json to $TAG before tagging, or retag."
+            exit 1
+          fi
+          echo "✓ tag $TAG matches package.json"
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build the SDK
+        run: pnpm --filter @relayhq/sdk build
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd packages/sdk
+          npm publish --access public --provenance
+
+  pypi:
+    name: Publish relayhq to PyPI
+    if: startsWith(github.ref, 'refs/tags/sdk-py-v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # OIDC for PyPI trusted publishers (optional alternative to PYPI_TOKEN —
+      # see https://docs.pypi.org/trusted-publishers/). Doesn't hurt to grant.
+      id-token: write
+    defaults:
+      run:
+        working-directory: sdks/python
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv (build + publish tool)
+        run: pip install uv
+
+      - name: Verify tag matches pyproject.toml version
+        run: |
+          TAG="${GITHUB_REF_NAME#sdk-py-v}"
+          PKG_VERSION=$(grep -E '^version = ' pyproject.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          if [ "$TAG" != "$PKG_VERSION" ]; then
+            echo "::error::Tag version ($TAG) does not match pyproject.toml version ($PKG_VERSION)"
+            exit 1
+          fi
+          echo "✓ tag $TAG matches pyproject.toml"
+
+      - name: Build sdist + wheel
+        run: uv build
+
+      - name: Publish to PyPI
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        run: uv publish

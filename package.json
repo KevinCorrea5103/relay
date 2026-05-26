@@ -13,6 +13,7 @@
     "db:migrate": "pnpm --filter @relayhq/db migrate",
     "db:bootstrap": "pnpm --filter @relayhq/db bootstrap",
     "db:keygen": "pnpm --filter @relayhq/db keygen",
+    "db:rotate-master-key": "pnpm --filter @relayhq/db rotate-master-key",
     "dev:control-plane": "pnpm --filter @relayhq/control-plane dev",
     "dev:runtime": "cd runtime && go run ./cmd/runtime",
     "dev:dashboard": "pnpm --filter @relayhq/dashboard dev",

@@ -1,4 +1,8 @@
-import { getPool } from "./client.js";
+import pg from "pg";
+import { getAdminPool } from "./client.js";
+
+type Queryable = pg.Pool | pg.PoolClient;
+const q = (c?: pg.PoolClient): Queryable => c ?? getAdminPool();
 
 export type Memory = {
   id: string;
@@ -39,17 +43,19 @@ function toVectorLiteral(embedding: number[]): string {
   return "[" + embedding.join(",") + "]";
 }
 
-export async function insertMemory(input: {
-  tenantId: string;
-  namespace: string;
-  content: string;
-  embedding: number[];
-  metadata?: Record<string, unknown>;
-  sourceRunId?: string | null;
-  ttlAt?: Date | null;
-}): Promise<Memory> {
-  const pool = getPool();
-  const res = await pool.query<Row>(
+export async function insertMemory(
+  input: {
+    tenantId: string;
+    namespace: string;
+    content: string;
+    embedding: number[];
+    metadata?: Record<string, unknown>;
+    sourceRunId?: string | null;
+    ttlAt?: Date | null;
+  },
+  client?: pg.PoolClient,
+): Promise<Memory> {
+  const res = await q(client).query<Row>(
     `insert into memories
         (tenant_id, namespace, content, embedding, metadata, source_run_id, ttl_at)
      values ($1, $2, $3, $4::vector, $5::jsonb, $6, $7)
@@ -67,16 +73,18 @@ export async function insertMemory(input: {
   return map(res.rows[0]!);
 }
 
-export async function searchMemories(input: {
-  tenantId: string;
-  namespace: string;
-  queryEmbedding: number[];
-  limit?: number;
-}): Promise<MemoryWithScore[]> {
-  const pool = getPool();
+export async function searchMemories(
+  input: {
+    tenantId: string;
+    namespace: string;
+    queryEmbedding: number[];
+    limit?: number;
+  },
+  client?: pg.PoolClient,
+): Promise<MemoryWithScore[]> {
   const limit = Math.min(input.limit ?? 5, 50);
   const vec = toVectorLiteral(input.queryEmbedding);
-  const res = await pool.query<Row & { similarity: number }>(
+  const res = await q(client).query<Row & { similarity: number }>(
     `select *, (1 - (embedding <=> $1::vector))::float8 as similarity
        from memories
       where tenant_id = $2
@@ -89,12 +97,14 @@ export async function searchMemories(input: {
   return res.rows.map((r) => ({ ...map(r), similarity: r.similarity }));
 }
 
-export async function listMemories(input: {
-  tenantId: string;
-  namespace?: string;
-  limit?: number;
-}): Promise<Memory[]> {
-  const pool = getPool();
+export async function listMemories(
+  input: {
+    tenantId: string;
+    namespace?: string;
+    limit?: number;
+  },
+  client?: pg.PoolClient,
+): Promise<Memory[]> {
   const limit = Math.min(input.limit ?? 100, 500);
   const params: unknown[] = [input.tenantId, limit];
   let where = "where tenant_id = $1";
@@ -102,7 +112,7 @@ export async function listMemories(input: {
     where += " and namespace = $3";
     params.push(input.namespace);
   }
-  const res = await pool.query<Row>(
+  const res = await q(client).query<Row>(
     `select * from memories ${where} order by created_at desc limit $2`,
     params,
   );
@@ -112,9 +122,9 @@ export async function listMemories(input: {
 export async function deleteMemory(
   tenantId: string,
   id: string,
+  client?: pg.PoolClient,
 ): Promise<boolean> {
-  const pool = getPool();
-  const res = await pool.query(
+  const res = await q(client).query(
     `delete from memories where tenant_id = $1 and id = $2`,
     [tenantId, id],
   );
@@ -124,9 +134,9 @@ export async function deleteMemory(
 export async function deleteNamespace(
   tenantId: string,
   namespace: string,
+  client?: pg.PoolClient,
 ): Promise<number> {
-  const pool = getPool();
-  const res = await pool.query(
+  const res = await q(client).query(
     `delete from memories where tenant_id = $1 and namespace = $2`,
     [tenantId, namespace],
   );

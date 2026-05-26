@@ -6,6 +6,8 @@ Memory, retries, tools, traces, and durable execution — without building
 orchestration infrastructure yourself.
 
 [![CI](https://github.com/KevinCorrea5103/relay/actions/workflows/ci.yml/badge.svg)](https://github.com/KevinCorrea5103/relay/actions/workflows/ci.yml)
+[![Integration](https://github.com/KevinCorrea5103/relay/actions/workflows/ci-integration.yml/badge.svg)](https://github.com/KevinCorrea5103/relay/actions/workflows/ci-integration.yml)
+[![Deploy](https://github.com/KevinCorrea5103/relay/actions/workflows/deploy.yml/badge.svg)](https://github.com/KevinCorrea5103/relay/actions/workflows/deploy.yml)
 [![npm](https://img.shields.io/npm/v/@relayhq/sdk?label=%40relayhq%2Fsdk&color=emerald)](https://www.npmjs.com/package/@relayhq/sdk)
 [![PyPI](https://img.shields.io/pypi/v/relayhq?label=relayhq&color=emerald)](https://pypi.org/project/relayhq/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-emerald)](LICENSE)
