@@ -297,6 +297,318 @@ curl -H "Authorization: Bearer $RELAY_API_KEY" \\
      "https://api.relaygh.dev/v1/runs?roots=true"`}
         />
       </section>
+
+      <section>
+        <H2 id="recipes">Recipes — patterns you&apos;ll actually build</H2>
+        <P>
+          The Graph and subagent primitives compose into the usual workflow
+          shapes. Each recipe below is a complete, copy-pasteable example.
+        </P>
+
+        <H3 id="recipe-parallel">Parallel fan-out + aggregate</H3>
+        <P>
+          Run N agents on the same input concurrently, then aggregate the
+          results. The Graph runner doesn&apos;t have built-in parallelism
+          (steps are sequential), so we use the SDK directly inside a single
+          step.
+        </P>
+        <Code
+          lang="typescript"
+          code={`import { createAgent, Graph, END, collectFinalOutput } from "@relayhq/sdk";
+
+const researcher = createAgent({ model: "gpt-4o" });
+const critic     = createAgent({ model: "claude-sonnet-4-6" });
+const summarizer = createAgent({ model: "claude-haiku-4-5" });
+
+type State = { topic: string; research?: string; critique?: string; summary?: string };
+
+const graph = new Graph<State>()
+  // ─── Fan out: research + critique run in parallel ──────────────────
+  .step("gather", async (state, ctx) => {
+    const [research, critique] = await Promise.all([
+      collectFinalOutput(
+        researcher.run(\`Research: \${state.topic}\`, {
+          workflowId: ctx.workflowId,
+        }),
+      ),
+      collectFinalOutput(
+        critic.run(\`Identify counter-arguments to: \${state.topic}\`, {
+          workflowId: ctx.workflowId,
+        }),
+      ),
+    ]);
+    return { research, critique };
+  })
+  // ─── Reduce: summarize both into one output ────────────────────────
+  .agent("summarize", summarizer, { inputFrom: "research", outputTo: "summary" })
+  .edge("gather", "summarize")
+  .edge("summarize", END);
+
+const result = await graph.run({ topic: "Whether to adopt CRDTs" });`}
+        />
+        <Callout kind="tip">
+          Both sub-runs pass <InlineCode>workflowId: ctx.workflowId</InlineCode>{" "}
+          so they share the parent&apos;s workflow tree. Cost aggregation via{" "}
+          <InlineCode>GET /v1/workflows/:id</InlineCode> includes all of them.
+        </Callout>
+
+        <H3 id="recipe-retry">Retry loop with bounded attempts</H3>
+        <P>
+          Useful when an LLM step might produce invalid output (e.g.
+          structured JSON that needs to validate against a schema, or code
+          that needs to compile).
+        </P>
+        <Code
+          lang="typescript"
+          code={`import { Graph, END } from "@relayhq/sdk";
+
+type State = {
+  prompt: string;
+  attempt: number;
+  output?: string;
+  valid?: boolean;
+  feedback?: string;
+};
+
+const graph = new Graph<State>()
+  .agent("generate", coder, { inputFrom: "prompt", outputTo: "output" })
+  .step("validate", async (state) => {
+    const result = await runTests(state.output!);
+    return {
+      valid: result.ok,
+      feedback: result.ok ? undefined : result.errors,
+      attempt: (state.attempt ?? 0) + 1,
+      // Feed the failure back into the prompt for the next attempt
+      prompt: result.ok
+        ? state.prompt
+        : \`\${state.prompt}\\n\\nPrevious attempt failed: \${result.errors}\\nFix and retry.\`,
+    };
+  })
+  .edge("generate", "validate")
+  .conditional("validate", (state) => {
+    if (state.valid) return END;
+    if (state.attempt >= 3) return END; // give up after 3
+    return "generate";
+  })
+  .start("generate");
+
+const result = await graph.run({ prompt: "Write a binary search in TS", attempt: 0 });`}
+        />
+
+        <H3 id="recipe-map-reduce">Map-reduce over a list</H3>
+        <P>
+          Process N items individually with the same agent, then aggregate.
+          Useful for batch summaries, per-document analysis, parallel
+          extraction.
+        </P>
+        <Code
+          lang="python"
+          code={`import asyncio
+from relayhq import Graph, END, collect_final_output, create_agent
+
+extractor = create_agent(model="gpt-4o-mini", system="Extract key facts as JSON.")
+synthesizer = create_agent(model="claude-sonnet-4-6", system="Synthesize a coherent summary.")
+
+graph = (
+    Graph()
+      # MAP: extract facts from each doc in parallel
+      .step("map", lambda state, ctx: asyncio.gather(*[
+          collect_final_output(
+              extractor.run(doc, workflow_id=ctx.workflow_id or None)
+          )
+          for doc in state["docs"]
+      ]).__await__() and {"facts": "..."})  # see TypeScript for cleaner version
+      # REDUCE: synthesize all facts into one summary
+      .agent("reduce", synthesizer, input_from="facts", output_to="summary")
+      .edge("map", "reduce")
+      .edge("reduce", END)
+)
+
+# In TypeScript the same pattern reads more naturally:
+# .step("map", async (state, ctx) => ({
+#   facts: (await Promise.all(state.docs.map(d =>
+#     collectFinalOutput(extractor.run(d, { workflowId: ctx.workflowId }))
+#   ))).join("\\n"),
+# }))`}
+        />
+
+        <H3 id="recipe-branching">Branching by classification</H3>
+        <P>
+          First agent classifies the input; downstream agents handle each
+          class. The conditional edge does the routing — no manual{" "}
+          <InlineCode>if/else</InlineCode> chains needed.
+        </P>
+        <Code
+          lang="typescript"
+          code={`import { createAgent, Graph, END } from "@relayhq/sdk";
+
+const classifier = createAgent({
+  model: "gpt-4o-mini",
+  system: 'Reply with one word: "refund", "shipping", "technical", or "other".',
+});
+const refundAgent     = createAgent({ model: "claude-sonnet-4-6", system: "..." });
+const shippingAgent   = createAgent({ model: "gpt-4o-mini",       system: "..." });
+const technicalAgent  = createAgent({ model: "claude-sonnet-4-6", system: "..." });
+const escalationAgent = createAgent({ model: "claude-sonnet-4-6", system: "..." });
+
+type State = { ticket: string; category?: string; response?: string };
+
+const graph = new Graph<State>()
+  .agent("classify", classifier, { inputFrom: "ticket", outputTo: "category" })
+  .agent("refund",     refundAgent,     { inputFrom: "ticket", outputTo: "response" })
+  .agent("shipping",   shippingAgent,   { inputFrom: "ticket", outputTo: "response" })
+  .agent("technical",  technicalAgent,  { inputFrom: "ticket", outputTo: "response" })
+  .agent("escalate",   escalationAgent, { inputFrom: "ticket", outputTo: "response" })
+  .conditional("classify", (state) => {
+    const cat = state.category?.toLowerCase().trim() ?? "";
+    if (cat.includes("refund"))    return "refund";
+    if (cat.includes("shipping"))  return "shipping";
+    if (cat.includes("technical")) return "technical";
+    return "escalate";
+  })
+  .edge("refund",    END)
+  .edge("shipping",  END)
+  .edge("technical", END)
+  .edge("escalate",  END)
+  .start("classify");
+
+const { state } = await graph.run({ ticket: "I never got my package" });`}
+        />
+
+        <H3 id="recipe-debate">Multi-agent debate (until consensus or rounds)</H3>
+        <P>
+          Two agents argue opposite sides, a third judges. Cycles back if no
+          consensus; bounded by total rounds.
+        </P>
+        <Code
+          lang="typescript"
+          code={`import { createAgent, Graph, END } from "@relayhq/sdk";
+
+const proposer = createAgent({ model: "claude-sonnet-4-6", system: "Argue FOR the proposal." });
+const opposer  = createAgent({ model: "claude-sonnet-4-6", system: "Argue AGAINST the proposal." });
+const judge    = createAgent({
+  model: "gpt-4o",
+  system: 'After reading both sides, output exactly: "CONSENSUS: <verdict>" or "MORE_DEBATE_NEEDED".',
+});
+
+type State = {
+  proposal: string;
+  transcript: string[];
+  round: number;
+  verdict?: string;
+};
+
+const graph = new Graph<State>()
+  .step("pro", async (state, ctx) => {
+    const out = await collectFinalOutput(
+      proposer.run(
+        \`Proposal: \${state.proposal}\\n\\nTranscript so far:\\n\${state.transcript.join("\\n")}\`,
+        { workflowId: ctx.workflowId },
+      ),
+    );
+    return { transcript: [...state.transcript, \`PRO: \${out}\`] };
+  })
+  .step("con", async (state, ctx) => {
+    const out = await collectFinalOutput(
+      opposer.run(
+        \`Proposal: \${state.proposal}\\n\\nTranscript so far:\\n\${state.transcript.join("\\n")}\`,
+        { workflowId: ctx.workflowId },
+      ),
+    );
+    return {
+      transcript: [...state.transcript, \`CON: \${out}\`],
+      round: state.round + 1,
+    };
+  })
+  .step("judge", async (state, ctx) => {
+    const out = await collectFinalOutput(
+      judge.run(state.transcript.join("\\n"), { workflowId: ctx.workflowId }),
+    );
+    return { verdict: out };
+  })
+  .edge("pro", "con")
+  .edge("con", "judge")
+  .conditional("judge", (state) => {
+    if (state.verdict?.startsWith("CONSENSUS:")) return END;
+    if (state.round >= 5) return END; // hard cap
+    return "pro"; // loop back
+  })
+  .start("pro");
+
+const { state, path } = await graph.run({
+  proposal: "Migrate from REST to GraphQL",
+  transcript: [],
+  round: 0,
+});
+console.log(\`Verdict after \${path.length} steps:\`, state.verdict);`}
+        />
+
+        <H3 id="recipe-human">Human-in-the-loop checkpoint</H3>
+        <P>
+          Workflow runs up to a step that requires human approval, persists
+          state, exits. Resumed later via a separate run that picks up where
+          it left off.
+        </P>
+        <P>
+          The simplest version: the &quot;wait for approval&quot; step polls
+          your own DB / queue for the human decision before continuing.
+          (Relay doesn&apos;t persist workflow state itself — that&apos;s
+          intentional, keeps the runner stateless and composable.)
+        </P>
+        <Code
+          lang="typescript"
+          code={`import { Graph, END } from "@relayhq/sdk";
+
+const graph = new Graph()
+  .agent("draft", drafter, { inputFrom: "brief", outputTo: "draft" })
+  .step("await_approval", async (state) => {
+    // Persist draft and an approval token to your own DB
+    const token = await approvals.create({ draft: state.draft });
+
+    // Notify a human (email, Slack, etc.)
+    await slack.send(\`Approval needed: https://your-app/approvals/\${token}\`);
+
+    // Block until approved or rejected. In a serverless world, end the
+    // workflow here and resume from a webhook in a follow-up run. In a
+    // long-lived worker, poll:
+    const decision = await approvals.waitForDecision(token, { timeoutMs: 3600_000 });
+    return { approved: decision.approved, feedback: decision.feedback };
+  })
+  .agent("publish",   publisher,    { inputFrom: "draft", outputTo: "published_url" })
+  .agent("revise",    drafter,      { inputFrom: "feedback", outputTo: "draft" })
+  .conditional("await_approval", (state) =>
+    state.approved ? "publish" : "revise",
+  )
+  .edge("publish", END)
+  .edge("revise",  "await_approval")
+  .start("draft");`}
+        />
+      </section>
+
+      <section>
+        <H2 id="picking">Picking the right primitive</H2>
+        <P>The rule of thumb:</P>
+        <ul className="list-disc space-y-2 pl-5 text-ink-300">
+          <li>
+            <strong>Single agent + tools</strong>: the model decides
+            everything dynamically. Use when the flow is open-ended.
+          </li>
+          <li>
+            <strong>subagent()</strong>: another agent <em>is</em> a tool.
+            Use when the parent should sometimes delegate, but not always.
+          </li>
+          <li>
+            <strong>Graph</strong>: deterministic pipeline with steps and
+            state. Use when you can describe the flow as a flowchart
+            without thinking about the LLM.
+          </li>
+          <li>
+            <strong>Graph with agent steps</strong>: pipeline structure with
+            LLMs filling in specific roles. The most common
+            production shape.
+          </li>
+        </ul>
+      </section>
     </DocsPage>
   );
 }
