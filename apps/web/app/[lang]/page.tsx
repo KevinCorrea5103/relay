@@ -167,13 +167,16 @@ export default async function LandingPage({
   return (
     <>
       {/* ─── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden">
-        <div className="grid-bg fade-mask absolute inset-0 opacity-50" />
-        <div className="absolute left-1/2 top-32 -z-10 h-[420px] w-[820px] -translate-x-1/2 bg-emerald-500/10 blur-[120px]" />
+      <section className="relative">
+        {/* Background only: avoid clipping hero text/code when the section had overflow-hidden. */}
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-x-clip overflow-y-hidden">
+          <div className="grid-bg fade-mask absolute inset-0 opacity-50" />
+          <div className="absolute left-1/2 top-32 h-[420px] w-[820px] max-w-[100vw] -translate-x-1/2 bg-emerald-500/10 blur-[120px]" />
+        </div>
 
-        <div className="relative mx-auto max-w-6xl px-6 pt-24 pb-20 sm:pt-32 sm:pb-24">
-          <div className="grid items-center gap-14 lg:grid-cols-[1.05fr_1fr]">
-            <div>
+        <div className="relative z-10 mx-auto w-full min-w-0 max-w-6xl px-4 pt-24 pb-20 sm:px-6 sm:pt-32 sm:pb-24">
+          <div className="grid min-w-0 grid-cols-1 items-center gap-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+            <div className="min-w-0">
               <Reveal>
                 <a
                   href={GITHUB_URL}
@@ -190,22 +193,22 @@ export default async function LandingPage({
               </Reveal>
 
               <Reveal delay={0.08}>
-                <h1 className="mt-6 font-sans text-[2.4rem] font-semibold leading-[1.05] tracking-tight text-ink-50 sm:text-5xl lg:text-[3.6rem]">
+                <h1 className="mt-6 max-w-full break-words font-sans text-[clamp(1.85rem,5.5vw+0.6rem,3.6rem)] font-semibold leading-[1.08] tracking-tight text-ink-50 sm:text-5xl lg:text-[3.6rem]">
                   {d.hero.title}
                 </h1>
               </Reveal>
 
               <Reveal delay={0.16}>
-                <p className="mt-6 max-w-xl text-lg leading-relaxed text-ink-400">
+                <p className="mt-6 max-w-xl break-words text-base leading-relaxed text-ink-400 sm:text-lg">
                   {d.hero.sub}
                 </p>
               </Reveal>
 
               <Reveal delay={0.24}>
-                <div className="mt-8 flex flex-wrap items-center gap-3">
+                <div className="mt-8 flex w-full min-w-0 flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
                   <Link
                     href={`/${lang}/signup`}
-                    className="group relative inline-flex items-center gap-2 rounded-md bg-emerald-500 px-5 py-2.5 text-sm font-medium text-ink-950 hover:bg-emerald-400 transition"
+                    className="group relative inline-flex w-full min-w-0 items-center justify-center gap-2 rounded-md bg-emerald-500 px-5 py-2.5 text-center text-sm font-medium text-ink-950 hover:bg-emerald-400 transition sm:w-auto"
                   >
                     {d.hero.primary}
                     <span className="transition-transform group-hover:translate-x-0.5">→</span>
@@ -214,13 +217,13 @@ export default async function LandingPage({
                     href={GITHUB_URL}
                     target="_blank"
                     rel="noreferrer"
-                    className="rounded-md border border-ink-700 bg-ink-900/40 px-5 py-2.5 text-sm font-medium text-ink-200 hover:border-ink-500 hover:text-ink-50 transition"
+                    className="inline-flex w-full min-w-0 items-center justify-center rounded-md border border-ink-700 bg-ink-900/40 px-5 py-2.5 text-center text-sm font-medium text-ink-200 hover:border-ink-500 hover:text-ink-50 transition sm:w-auto"
                   >
                     {d.hero.secondary}
                   </a>
                   <Link
                     href={`/${lang}/docs/quickstart`}
-                    className="px-2 py-2.5 text-sm text-ink-400 hover:text-ink-100 transition"
+                    className="inline-flex justify-center px-2 py-2.5 text-center text-sm text-ink-400 hover:text-ink-100 transition sm:inline"
                   >
                     Self-host →
                   </Link>
@@ -228,37 +231,37 @@ export default async function LandingPage({
               </Reveal>
 
               <Reveal delay={0.32}>
-                <div className="mt-6 flex flex-wrap items-center gap-2">
+                <div className="mt-6 flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                   <a
                     href="https://www.npmjs.com/package/@relayhq/sdk"
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 rounded-md border border-ink-800/70 bg-ink-950/60 px-3 py-1.5 font-mono text-xs text-ink-400 hover:border-emerald-500/40 hover:text-ink-100 transition"
+                    className="inline-flex min-w-0 max-w-full items-center gap-2 rounded-md border border-ink-800/70 bg-ink-950/60 px-3 py-1.5 font-mono text-xs text-ink-400 hover:border-emerald-500/40 hover:text-ink-100 transition"
                     title="View on npm"
                   >
-                    <span className="text-emerald-400">$</span>
-                    <span>{d.hero.installNpm}</span>
-                    <span className="ml-1 text-ink-600">↗</span>
+                    <span className="shrink-0 text-emerald-400">$</span>
+                    <span className="min-w-0 break-all">{d.hero.installNpm}</span>
+                    <span className="ml-1 shrink-0 text-ink-600">↗</span>
                   </a>
                   <a
                     href="https://pypi.org/project/relayhq/"
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 rounded-md border border-ink-800/70 bg-ink-950/60 px-3 py-1.5 font-mono text-xs text-ink-400 hover:border-emerald-500/40 hover:text-ink-100 transition"
+                    className="inline-flex min-w-0 max-w-full items-center gap-2 rounded-md border border-ink-800/70 bg-ink-950/60 px-3 py-1.5 font-mono text-xs text-ink-400 hover:border-emerald-500/40 hover:text-ink-100 transition"
                     title="View on PyPI"
                   >
-                    <span className="text-emerald-400">$</span>
-                    <span>{d.hero.installPip}</span>
-                    <span className="ml-1 text-ink-600">↗</span>
+                    <span className="shrink-0 text-emerald-400">$</span>
+                    <span className="min-w-0 break-all">{d.hero.installPip}</span>
+                    <span className="ml-1 shrink-0 text-ink-600">↗</span>
                   </a>
                 </div>
               </Reveal>
             </div>
 
             <Reveal delay={0.2}>
-              <div className="relative">
+              <div className="relative min-w-0 w-full">
                 <div className="absolute -inset-2 rounded-2xl bg-gradient-to-br from-emerald-500/20 via-transparent to-transparent blur-2xl" />
-                <div className="relative">
+                <div className="relative min-w-0">
                   <Code code={HERO_CODE} lang="typescript" fileName={d.hero.codeCaption} />
                 </div>
               </div>
@@ -321,9 +324,9 @@ export default async function LandingPage({
             </Reveal>
           </div>
 
-          <div className="mt-14 grid gap-6 lg:grid-cols-2">
+          <div className="mt-14 grid min-w-0 gap-6 lg:grid-cols-2">
             <Reveal delay={0.1}>
-              <div className="h-full rounded-xl border border-rose-500/15 bg-rose-500/[0.025] p-6">
+              <div className="h-full min-w-0 rounded-xl border border-rose-500/15 bg-rose-500/[0.025] p-6">
                 <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-rose-300/80">
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-rose-400/60" />
                   {d.compare.withoutLabel}
@@ -343,7 +346,7 @@ export default async function LandingPage({
             </Reveal>
 
             <Reveal delay={0.2}>
-              <div className="h-full rounded-xl border border-emerald-500/30 bg-emerald-500/[0.04] p-6">
+              <div className="h-full min-w-0 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.04] p-6">
                 <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-emerald-300">
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
                   {d.compare.withLabel}
@@ -519,8 +522,8 @@ export default async function LandingPage({
       </section>
 
       {/* ─── CTA (self-host only) ─────────────────────────────────────────── */}
-      <section className="relative border-t border-ink-800/40 py-28 overflow-hidden">
-        <div className="absolute inset-x-0 top-0 -z-10 h-72 bg-gradient-to-b from-emerald-500/[0.07] to-transparent" />
+      <section className="relative border-t border-ink-800/40 py-28">
+        <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 overflow-x-clip bg-gradient-to-b from-emerald-500/[0.07] to-transparent" />
         <div className="mx-auto max-w-3xl px-6 text-center">
           <Reveal>
             <p className="text-xs uppercase tracking-[0.18em] text-emerald-400/90">{d.cta.eyebrow}</p>

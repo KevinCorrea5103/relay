@@ -17,8 +17,8 @@ export function LanguageTabs({ tabs }: { tabs: LanguageTab[] }) {
   const tab = tabs[active]!;
 
   return (
-    <figure className="overflow-hidden rounded-xl border border-ink-800/80 bg-ink-950/80 backdrop-blur ring-1 ring-inset ring-white/[0.03] shadow-2xl shadow-emerald-950/20">
-      <div className="flex flex-wrap items-center gap-0 border-b border-ink-800/70 px-2 text-sm">
+    <figure className="w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-ink-800/80 bg-ink-950/80 backdrop-blur ring-1 ring-inset ring-white/[0.03] shadow-2xl shadow-emerald-950/20">
+      <div className="flex min-w-0 flex-wrap items-center gap-0 border-b border-ink-800/70 px-2 text-sm">
         {tabs.map((t, i) => (
           <button
             key={t.label}
@@ -34,24 +34,24 @@ export function LanguageTabs({ tabs }: { tabs: LanguageTab[] }) {
           </button>
         ))}
         {tab.install && (
-          <div className="ml-auto flex items-center gap-2 px-3 py-3 text-[11px] text-ink-500">
+          <div className="ml-auto flex min-w-0 max-w-full items-center gap-2 px-3 py-3 text-[11px] text-ink-500">
             {tab.badge ? (
               <a
                 href={tab.badge.href}
                 target="_blank"
                 rel="noreferrer"
-                className="font-mono hover:text-emerald-300 transition"
+                className="break-words font-mono hover:text-emerald-300 transition"
               >
                 {tab.install} ↗
               </a>
             ) : (
-              <span className="font-mono">{tab.install}</span>
+              <span className="break-words font-mono">{tab.install}</span>
             )}
           </div>
         )}
       </div>
       <div
-        className="text-[13px] [&_pre]:!bg-transparent [&_pre]:py-5 [&_pre]:px-5 [&_pre]:overflow-x-auto"
+        className="min-w-0 max-w-full text-[13px] [&_pre]:!bg-transparent [&_pre]:min-w-0 [&_pre]:max-w-full [&_pre]:py-5 [&_pre]:px-5 [&_pre]:overflow-x-auto"
         dangerouslySetInnerHTML={{ __html: tab.html }}
       />
     </figure>

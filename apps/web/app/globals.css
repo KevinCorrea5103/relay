@@ -57,6 +57,8 @@ pre.shiki {
   padding: 1rem 1.25rem;
   font-size: 13px;
   line-height: 1.65;
+  max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
 }
 pre.shiki code {

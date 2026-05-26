@@ -36,11 +36,11 @@ export default async function LocaleLayout({
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-ink-800/40 bg-ink-975/70 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link href={`/${lang}`} aria-label="Relay home">
+        <div className="mx-auto flex min-w-0 max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <Link href={`/${lang}`} aria-label="Relay home" className="shrink-0">
             <Wordmark size={18} />
           </Link>
-          <nav className="flex items-center gap-5 text-sm text-ink-400 sm:gap-7">
+          <nav className="flex min-w-0 flex-wrap items-center justify-end gap-x-2 gap-y-2 text-xs text-ink-400 sm:gap-x-5 sm:gap-y-0 sm:text-sm md:gap-x-7">
             <Link
               href={`/${lang}/docs`}
               className="hover:text-ink-100 transition"

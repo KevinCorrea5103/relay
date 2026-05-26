@@ -22,7 +22,7 @@ export function Reveal({
   const Component = motion[As] as typeof motion.div;
   return (
     <Component
-      className={className}
+      className={["w-full min-w-0 max-w-full", className].filter(Boolean).join(" ")}
       variants={variants}
       initial="hidden"
       whileInView="show"
