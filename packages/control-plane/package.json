@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "hono": "^4.6.0",
-    "@hono/node-server": "^1.13.0",
+    "@hono/node-server": "^2.0.4",
     "@relayhq/db": "workspace:*",
     "ioredis": "^5.4.1",
     "nats": "^2.29.0"
