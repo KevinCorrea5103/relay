@@ -11,10 +11,10 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "hono": "^4.6.0",
+    "hono": "^4.12.23",
     "@hono/node-server": "^1.13.0",
     "@relayhq/db": "workspace:*",
-    "ioredis": "^5.4.1",
+    "ioredis": "^5.11.0",
     "nats": "^2.29.0"
   },
   "devDependencies": {
