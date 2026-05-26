@@ -4,6 +4,7 @@ import { codeToHtml } from "shiki";
 import { Code } from "@/components/Code";
 import { LanguageTabs, type LanguageTab } from "@/components/LanguageTabs";
 import { Reveal } from "@/components/Reveal";
+import { StackMarquee } from "@/components/StackMarquee";
 import { dicts, isLocale, type Locale } from "@/lib/dict";
 
 const GITHUB_URL = "https://github.com/KevinCorrea5103/relay";
@@ -39,18 +40,6 @@ const QUICKSTART_CODE = `git clone https://github.com/KevinCorrea5103/relay
 cd relay && pnpm install
 pnpm bootstrap   # mints keys, brings up Postgres, migrates
 pnpm dev         # runtime + control-plane + dashboard + web`;
-
-const BUILT_ON = [
-  "Postgres",
-  "pgvector",
-  "Anthropic",
-  "OpenAI",
-  "Ollama",
-  "Hono",
-  "Next.js",
-  "Go",
-  "Docker",
-];
 
 // ─── Language snippets for the multi-language section ──────────────────────
 // Each one shows the same idea: create an agent, run it, stream tokens.
@@ -279,12 +268,8 @@ export default async function LandingPage({
             </p>
           </Reveal>
           <Reveal delay={0.1}>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-sm text-ink-400">
-              {BUILT_ON.map((name) => (
-                <span key={name} className="font-mono hover:text-ink-200 transition">
-                  {name}
-                </span>
-              ))}
+            <div className="mt-6">
+              <StackMarquee />
             </div>
           </Reveal>
         </div>

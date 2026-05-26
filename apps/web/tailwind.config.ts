@@ -43,6 +43,9 @@ const config: Config = {
         "fade-up": "fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both",
         "shine": "shine 8s linear infinite",
         "pulse-slow": "pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        // Used by StackMarquee for the infinite logo carousel.
+        // 30s feels deliberate at this density; bump for slower.
+        "marquee": "marquee 30s linear infinite",
       },
       keyframes: {
         "fade-up": {
@@ -52,6 +55,10 @@ const config: Config = {
         shine: {
           from: { backgroundPosition: "200% center" },
           to: { backgroundPosition: "-200% center" },
+        },
+        marquee: {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(-50%)" },
         },
       },
     },
