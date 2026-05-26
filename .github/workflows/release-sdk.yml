@@ -33,6 +33,10 @@ jobs:
     environment: Production
     permissions:
       contents: read
+      # Required by `npm publish --provenance` (cryptographically attests
+      # the package was built from this exact commit + workflow run, shown
+      # on npmjs.com as a "Provenance" badge).
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
