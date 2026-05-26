@@ -24,6 +24,7 @@ from .agent import Agent, create_agent
 from .builtin import builtin
 from .client import RelayError
 from .graph import END, START, Graph, GraphRunResult, StepContext, collect_final_output
+from .orchestrator import create_orchestrator, describe_team
 from .schema import validate_against_schema
 from .subagent import subagent
 from .tool import tool
@@ -34,6 +35,8 @@ __all__ = [
     "create_agent",
     "tool",
     "subagent",
+    "create_orchestrator",
+    "describe_team",
     "builtin",
     "RelayError",
     "validate_against_schema",

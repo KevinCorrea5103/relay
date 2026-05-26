@@ -15,6 +15,8 @@ export type {
   GraphRunOptions,
   GraphRunResult,
 } from "./graph.js";
+export { createOrchestrator, describeTeam } from "./orchestrator.js";
+export type { OrchestratorConfig, TeammateSpec } from "./orchestrator.js";
 export type { Agent } from "./agent.js";
 export type {
   AgentConfig,

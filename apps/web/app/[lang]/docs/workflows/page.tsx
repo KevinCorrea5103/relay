@@ -33,10 +33,10 @@ export default async function WorkflowsDocs({
       description="Compose multiple agents. Two primitives: subagent() for LLM-driven composition, Graph for declarative pipelines."
     >
       <section>
-        <H2 id="why">Two primitives, on purpose</H2>
+        <H2 id="why">Three primitives, on purpose</H2>
         <P>
-          Relay gives you two ways to build multi-agent systems, and they
-          solve different problems:
+          Relay gives you three layers to build multi-agent systems. Each
+          one solves a different problem; pick the lowest-level that fits.
         </P>
         <ul className="list-disc space-y-2 pl-5 text-ink-300">
           <li>
@@ -49,6 +49,15 @@ export default async function WorkflowsDocs({
           </li>
           <li>
             <strong>
+              <InlineCode>createOrchestrator()</InlineCode>
+            </strong>{" "}
+            higher-level wrapper for the &quot;supervisor + team&quot;
+            pattern. You hand it a team of named agents and one LLM
+            coordinates them — auto-generates the system prompt from the
+            team description. 80% of multi-agent use cases in 3 lines.
+          </li>
+          <li>
+            <strong>
               <InlineCode>Graph</InlineCode>
             </strong>{" "}
             wires steps with explicit edges and state passing. The
@@ -57,9 +66,10 @@ export default async function WorkflowsDocs({
           </li>
         </ul>
         <P>
-          Both produce the same artifact server-side: a tree of runs linked
-          by <InlineCode>workflow_id</InlineCode>. The dashboard renders the
-          tree and the cost endpoint sums tokens across the whole workflow.
+          All three produce the same artifact server-side: a tree of runs
+          linked by <InlineCode>workflow_id</InlineCode>. The dashboard
+          renders the tree and the cost endpoint sums tokens across the
+          whole workflow.
         </P>
       </section>
 
@@ -141,6 +151,147 @@ writer = create_agent(
             Each sub-run gets its own row in <InlineCode>runs</InlineCode>{" "}
             with <InlineCode>parent_run_id</InlineCode> set, so the cost
             and trace are attributable.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <H2 id="orchestrator">createOrchestrator() — supervisor + team</H2>
+        <P>
+          The fastest path to a multi-agent system. You declare a team of
+          named specialists; one supervisor LLM decides which to call for
+          each part of the user&apos;s request, calls them as tools, and
+          synthesizes the final answer.
+        </P>
+        <P>
+          Under the hood, this is{" "}
+          <InlineCode>createAgent()</InlineCode> with each teammate wrapped
+          in <InlineCode>subagent()</InlineCode>, plus an auto-generated
+          system prompt built from the team descriptions. You can do the
+          same by hand — but you&apos;ll write the same boilerplate every
+          time.
+        </P>
+        <Code
+          lang="ts"
+          code={`import { createAgent, createOrchestrator } from "@relayhq/sdk";
+
+const researcher = createAgent({ model: "gpt-4o" });
+const writer     = createAgent({ model: "claude-sonnet-4-6" });
+const reviewer   = createAgent({ model: "claude-haiku-4-5" });
+
+const team = createOrchestrator({
+  model: "claude-sonnet-4-6",  // the supervisor's brain
+  agents: {
+    research: {
+      agent: researcher,
+      description: "Researches topics and returns key facts.",
+    },
+    write: {
+      agent: writer,
+      description: "Writes drafts from research notes.",
+    },
+    review: {
+      agent: reviewer,
+      description: "Reviews drafts; returns 'approved' or feedback.",
+    },
+  },
+});
+
+// Use it like any other agent
+for await (const ev of team.run("Write a 200-word post about pgvector")) {
+  if (ev.type === "token") process.stdout.write(ev.text);
+}`}
+        />
+
+        <H3 id="orchestrator-py">Python</H3>
+        <Code
+          lang="python"
+          code={`from relayhq import create_agent, create_orchestrator
+
+researcher = create_agent(model="gpt-4o")
+writer     = create_agent(model="claude-sonnet-4-6")
+reviewer   = create_agent(model="claude-haiku-4-5")
+
+team = create_orchestrator(
+    model="claude-sonnet-4-6",
+    agents={
+        "research": {
+            "agent": researcher,
+            "description": "Researches topics and returns key facts.",
+        },
+        "write": {
+            "agent": writer,
+            "description": "Writes drafts from research notes.",
+        },
+        "review": {
+            "agent": reviewer,
+            "description": "Reviews drafts; returns approved or feedback.",
+        },
+    },
+)
+
+async for ev in team.run("Write a 200-word post about pgvector"):
+    if ev.get("type") == "token":
+        print(ev["text"], end="", flush=True)`}
+        />
+
+        <H3 id="orchestrator-extras">Extending the supervisor</H3>
+        <P>
+          Two escape hatches when the auto-generated prompt isn&apos;t
+          enough:
+        </P>
+        <ul className="list-disc space-y-2 pl-5 text-ink-300">
+          <li>
+            <strong>
+              <InlineCode>system: &quot;...&quot;</InlineCode>
+            </strong>{" "}
+            — appended after the team description. Use for output format
+            rules, safety constraints, tone.
+          </li>
+          <li>
+            <strong>
+              <InlineCode>extraTools: [...]</InlineCode>
+            </strong>{" "}
+            — extra tools the supervisor can call directly, alongside
+            teammates. Example: give the supervisor{" "}
+            <InlineCode>builtin.calculator</InlineCode> so it can do simple
+            math without delegating.
+          </li>
+        </ul>
+        <Code
+          lang="ts"
+          code={`const team = createOrchestrator({
+  model: "claude-sonnet-4-6",
+  agents: { ... },
+  system:
+    "Always return the final answer as JSON: { summary, sources, confidence }.\\n" +
+    "If teammates disagree, set confidence to 'low' and list both views.",
+  extraTools: [builtin.calculator, getCurrentTime],
+});`}
+        />
+
+        <H3 id="orchestrator-when">When NOT to use the orchestrator</H3>
+        <P>If you find yourself doing any of these, drop down to the lower-level primitives:</P>
+        <ul className="list-disc space-y-2 pl-5 text-ink-300">
+          <li>
+            <strong>Need a strict sequence</strong> (always research → write
+            → review, no skipping) → use <InlineCode>Graph</InlineCode>.
+            The LLM will deviate eventually.
+          </li>
+          <li>
+            <strong>Need to pass typed state between agents</strong> → use{" "}
+            <InlineCode>Graph</InlineCode>. The orchestrator passes a
+            string prompt; not a struct.
+          </li>
+          <li>
+            <strong>Need parallel fan-out</strong> → use{" "}
+            <InlineCode>Graph</InlineCode> with{" "}
+            <InlineCode>Promise.all</InlineCode> inside a step. The
+            supervisor calls tools sequentially by default.
+          </li>
+          <li>
+            <strong>You have one specialist agent</strong> → just use
+            that agent directly. The supervisor layer is overhead.
           </li>
         </ul>
       </section>
@@ -587,7 +738,7 @@ const graph = new Graph()
 
       <section>
         <H2 id="picking">Picking the right primitive</H2>
-        <P>The rule of thumb:</P>
+        <P>The rule of thumb, in increasing order of structure:</P>
         <ul className="list-disc space-y-2 pl-5 text-ink-300">
           <li>
             <strong>Single agent + tools</strong>: the model decides
@@ -596,6 +747,13 @@ const graph = new Graph()
           <li>
             <strong>subagent()</strong>: another agent <em>is</em> a tool.
             Use when the parent should sometimes delegate, but not always.
+          </li>
+          <li>
+            <strong>createOrchestrator()</strong>: a supervisor LLM
+            coordinating a team of specialists. Use when you want
+            multi-agent without writing the routing logic. The fastest
+            path from &quot;I have 3 agents&quot; to &quot;working
+            multi-agent system&quot;.
           </li>
           <li>
             <strong>Graph</strong>: deterministic pipeline with steps and
