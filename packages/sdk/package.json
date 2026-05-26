@@ -1,6 +1,6 @@
 {
   "name": "@relayhq/sdk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "The backend cloud for reliable AI agents. Memory, retries, tools, traces and durable execution without building orchestration infrastructure yourself.",
   "license": "Apache-2.0",
   "author": "Relay Contributors",
