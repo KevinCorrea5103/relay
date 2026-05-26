@@ -25,12 +25,11 @@ updates:
         dependency-type: development
         update-types: [minor, patch]
     ignore:
-      # Pin Next / React majors — bumping these requires migration work.
-      - dependency-name: next
-        update-types: [version-update:semver-major]
-      - dependency-name: react
-        update-types: [version-update:semver-major]
-      - dependency-name: react-dom
+      # Skip ALL major version bumps everywhere — they almost always need
+      # human eyes for breaking-change migration. Dependabot still flags
+      # them as security alerts if they're CVE fixes; we just don't get
+      # spammed with breaking PRs to triage.
+      - dependency-name: "*"
         update-types: [version-update:semver-major]
 
   # ─── Python SDK ───────────────────────────────────────────────────────
@@ -40,6 +39,9 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 3
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
 
   # ─── Go runtime ───────────────────────────────────────────────────────
   # Today the runtime is stdlib-only; Dependabot will still notice if a
@@ -68,8 +70,16 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    ignore:
+      # node:20-alpine is fine; we don't want bumps to node:21+ until we
+      # consciously upgrade the runtime.
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
   - package-ecosystem: docker
     directory: /runtime
     schedule:
       interval: weekly
       day: monday
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
