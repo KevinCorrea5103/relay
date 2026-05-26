@@ -104,7 +104,7 @@ jobs:
           echo "✓ NATS JetStream up"
 
       # ClickHouse needs --ulimit nofile=262144 to start, which `services:`
-      # can't supply. Launch it ourselves with the right limits and wait.
+      # can't supply. Launch it ourselves with the right limits.
       - name: Launch ClickHouse
         run: |
           docker run -d --name clickhouse \
@@ -115,16 +115,19 @@ jobs:
             -e CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1 \
             --ulimit nofile=262144:262144 \
             clickhouse/clickhouse-server:24.8-alpine
-          # Give it up to 90s to come up (cold pull + init is slow on small runners).
-          for i in $(seq 1 45); do
-            if curl -sf http://localhost:8123/ping | grep -q Ok; then
-              echo "✓ ClickHouse up after ${i}x2s"
+          # /ping returns Ok BEFORE the entrypoint finishes creating the
+          # relay user + database, so probe with the actual credentials
+          # we're going to use — that's the real ready signal.
+          for i in $(seq 1 60); do
+            if curl -sf -u relay:relay "http://localhost:8123/?database=relay" \
+                 --data "SELECT 1" 2>/dev/null | grep -q "^1$"; then
+              echo "✓ ClickHouse ready (relay user + db live) after ${i}x2s"
               exit 0
             fi
             sleep 2
           done
-          echo "✗ ClickHouse did not come up in 90s"
-          docker logs clickhouse | tail -50 || true
+          echo "✗ ClickHouse never became ready in 120s"
+          docker logs clickhouse | tail -100
           exit 1
 
       - name: Run Postgres migrations
