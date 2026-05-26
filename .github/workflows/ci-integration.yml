@@ -57,19 +57,9 @@ jobs:
           --health-timeout 2s
           --health-retries 30
 
-      clickhouse:
-        image: clickhouse/clickhouse-server:24.8-alpine
-        env:
-          CLICKHOUSE_USER: relay
-          CLICKHOUSE_PASSWORD: relay
-          CLICKHOUSE_DB: relay
-          CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
-        ports: ["8123:8123", "9000:9000"]
-        options: >-
-          --health-cmd "wget -q -O- http://localhost:8123/ping | grep -q Ok"
-          --health-interval 2s
-          --health-timeout 2s
-          --health-retries 30
+      # ClickHouse is launched as an explicit step below — `services:` doesn't
+      # let us pass `--ulimit nofile=...` which the image needs to start. With
+      # default ulimits the container exits before the healthcheck ever runs.
 
     env:
       DATABASE_URL: postgres://relay:relay@localhost:5434/relay
@@ -112,6 +102,30 @@ jobs:
             sleep 1
           done
           echo "✓ NATS JetStream up"
+
+      # ClickHouse needs --ulimit nofile=262144 to start, which `services:`
+      # can't supply. Launch it ourselves with the right limits and wait.
+      - name: Launch ClickHouse
+        run: |
+          docker run -d --name clickhouse \
+            -p 8123:8123 -p 9000:9000 \
+            -e CLICKHOUSE_USER=relay \
+            -e CLICKHOUSE_PASSWORD=relay \
+            -e CLICKHOUSE_DB=relay \
+            -e CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1 \
+            --ulimit nofile=262144:262144 \
+            clickhouse/clickhouse-server:24.8-alpine
+          # Give it up to 90s to come up (cold pull + init is slow on small runners).
+          for i in $(seq 1 45); do
+            if curl -sf http://localhost:8123/ping | grep -q Ok; then
+              echo "✓ ClickHouse up after ${i}x2s"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "✗ ClickHouse did not come up in 90s"
+          docker logs clickhouse | tail -50 || true
+          exit 1
 
       - name: Run Postgres migrations
         run: pnpm db:migrate
