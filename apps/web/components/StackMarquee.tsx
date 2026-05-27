@@ -51,9 +51,12 @@ export function StackMarquee() {
       }}
     >
       <div
-        className="flex w-max items-center gap-x-16 py-2 [&:hover]:[animation-play-state:paused]"
+        // `animate-marquee` (not an inline `animation` style) so Tailwind
+        // actually emits the @keyframes — it only generates the keyframe rule
+        // when the matching utility class appears in the markup. The CSS var
+        // still rides along inline to drive the shift distance.
+        className="flex w-max animate-marquee items-center gap-x-16 py-2 [&:hover]:[animation-play-state:paused]"
         style={{
-          animation: `marquee 30s linear infinite`,
           ["--marquee-shift" as string]: `-${SHIFT_PERCENT}%`,
         }}
       >
