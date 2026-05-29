@@ -36,6 +36,32 @@ const COMPARE_CODE = `const agent = createAgent({
 
 await agent.run("Review the last PR")`;
 
+const ORCHESTRATION_CODE = `import { createAgent, createOrchestrator } from "@relayhq/sdk";
+
+const researcher = createAgent({
+  model: "claude-sonnet-4-6",
+  system: "Find and verify facts. Cite sources.",
+});
+
+const writer = createAgent({
+  model: "gpt-4o",
+  system: "Turn notes into crisp, on-brand prose.",
+});
+
+// A supervisor that routes to the right teammate — the system
+// prompt is auto-generated from the team description.
+const team = createOrchestrator({
+  model: "claude-sonnet-4-6",
+  agents: {
+    researcher: { agent: researcher, description: "Finds and verifies facts" },
+    writer: { agent: writer, description: "Drafts copy from notes" },
+  },
+});
+
+for await (const e of team.run("Draft a launch post about our new pricing")) {
+  if (e.type === "token") process.stdout.write(e.text);
+}`;
+
 const QUICKSTART_CODE = `git clone https://github.com/KevinCorrea5103/relay
 cd relay && pnpm install
 pnpm bootstrap   # mints keys, brings up Postgres, migrates
@@ -153,8 +179,44 @@ export default async function LandingPage({
   if (!isLocale(lang)) notFound();
   const d = dicts[lang as Locale];
 
+  const origin = "https://relaygh.dev";
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        name: "Relay",
+        applicationCategory: "DeveloperApplication",
+        operatingSystem: "Cloud, Linux, macOS, Windows",
+        description: d.meta.description,
+        url: `${origin}/${lang}`,
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        license: "https://www.apache.org/licenses/LICENSE-2.0",
+        softwareHelp: `${origin}/${lang}/docs`,
+        sameAs: [
+          GITHUB_URL,
+          "https://www.npmjs.com/package/@relayhq/sdk",
+          "https://pypi.org/project/relayhq/",
+        ],
+      },
+      {
+        "@type": "FAQPage",
+        mainEntity: d.faq.items.map((item) => ({
+          "@type": "Question",
+          name: item.q,
+          acceptedAnswer: { "@type": "Answer", text: item.a },
+        })),
+      },
+    ],
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        // Structured data for rich results — SoftwareApplication + FAQ.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* ─── Hero ─────────────────────────────────────────────────────────── */}
       <section className="relative">
         {/* Background only: avoid clipping hero text/code when the section had overflow-hidden. */}
@@ -418,6 +480,59 @@ export default async function LandingPage({
                 </div>
               </Reveal>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Orchestration / compose agents ───────────────────────────────── */}
+      <section className="border-t border-ink-800/40 py-28">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid min-w-0 items-start gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+            <div className="min-w-0">
+              <Reveal>
+                <p className="text-xs uppercase tracking-[0.18em] text-emerald-400/90">
+                  {d.orchestration.eyebrow}
+                </p>
+              </Reveal>
+              <Reveal delay={0.08}>
+                <h2 className="mt-4 font-sans text-3xl font-semibold leading-tight tracking-tight text-ink-50 sm:text-4xl">
+                  {d.orchestration.title}
+                </h2>
+              </Reveal>
+              <Reveal delay={0.16}>
+                <p className="mt-4 text-ink-400">{d.orchestration.sub}</p>
+              </Reveal>
+
+              <dl className="mt-8 space-y-5">
+                {d.orchestration.bullets.map((b, i) => (
+                  <Reveal key={b.title} delay={0.2 + i * 0.08}>
+                    <div className="border-l-2 border-emerald-500/40 pl-4">
+                      <dt className="font-mono text-sm font-semibold text-ink-100">
+                        {b.title}
+                      </dt>
+                      <dd className="mt-1.5 text-sm leading-relaxed text-ink-400">
+                        {b.body}
+                      </dd>
+                    </div>
+                  </Reveal>
+                ))}
+              </dl>
+
+              <Reveal delay={0.5}>
+                <p className="mt-8 text-sm leading-relaxed text-ink-500">
+                  {d.orchestration.footer}
+                </p>
+              </Reveal>
+            </div>
+
+            <Reveal delay={0.2}>
+              <div className="relative min-w-0 w-full lg:sticky lg:top-24">
+                <div className="absolute -inset-2 rounded-2xl bg-gradient-to-br from-emerald-500/15 via-transparent to-transparent blur-2xl" />
+                <div className="relative min-w-0">
+                  <Code code={ORCHESTRATION_CODE} lang="typescript" fileName="team.ts" />
+                </div>
+              </div>
+            </Reveal>
           </div>
         </div>
       </section>

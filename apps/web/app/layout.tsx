@@ -26,12 +26,18 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Relay Contributors" }],
   creator: "Relay",
+  applicationName: "Relay",
+  category: "technology",
+  alternates: { canonical: "/en", languages: { en: "/en", es: "/es", "x-default": "/en" } },
   openGraph: {
     type: "website",
+    url: "https://relaygh.dev",
     title: "Relay — the backend cloud for reliable AI agents",
     description:
       "Memory, retries, tools, traces, and durable execution — without building orchestration infrastructure yourself.",
     siteName: "Relay",
+    locale: "en_US",
+    alternateLocale: "es_ES",
   },
   twitter: {
     card: "summary_large_image",

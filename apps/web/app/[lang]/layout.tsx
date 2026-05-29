@@ -19,7 +19,24 @@ export async function generateMetadata({
   const { lang } = await params;
   if (!isLocale(lang)) return {};
   const d = dicts[lang];
-  return { title: d.meta.title, description: d.meta.description };
+  const ogLocale = lang === "es" ? "es_ES" : "en_US";
+  const altLocale = lang === "es" ? "en_US" : "es_ES";
+  return {
+    title: d.meta.title,
+    description: d.meta.description,
+    alternates: {
+      canonical: `/${lang}`,
+      languages: { en: "/en", es: "/es", "x-default": "/en" },
+    },
+    openGraph: {
+      title: d.meta.title,
+      description: d.meta.description,
+      url: `/${lang}`,
+      locale: ogLocale,
+      alternateLocale: altLocale,
+    },
+    twitter: { title: d.meta.title, description: d.meta.description },
+  };
 }
 
 export default async function LocaleLayout({
@@ -35,6 +52,13 @@ export default async function LocaleLayout({
 
   return (
     <>
+      {/* The root <html lang> is static "en"; correct it for the active
+          locale so assistive tech and crawlers read the right language. */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `document.documentElement.lang=${JSON.stringify(lang)}`,
+        }}
+      />
       <header className="sticky top-0 z-50 border-b border-ink-800/40 bg-ink-975/70 backdrop-blur-xl">
         <div className="mx-auto flex min-w-0 max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
           <Link href={`/${lang}`} aria-label="Relay home" className="shrink-0">
